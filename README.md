@@ -1,4 +1,10 @@
 # threnoscopeSC
 SuperCollider source code for the Threnoscope
 
-Thor Magnusson
+Author: Thor Magnusson
+
+Further information about the Threnoscope can be found here:
+
+https://thormagnusson.github.io/threnoscope/
+
+Enjoy!
