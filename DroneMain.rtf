@@ -1,0 +1,589 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf400
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 Monaco;\f1\fswiss\fcharset0 Helvetica;\f2\fmodern\fcharset0 Courier;
+}
+{\colortbl;\red255\green255\blue255;\red191\green0\blue0;\red0\green0\blue255;\red0\green115\blue0;
+\red0\green0\blue191;\red51\green51\blue191;\red96\green96\blue96;\red255\green102\blue0;}
+{\*\expandedcolortbl;;\csgenericrgb\c74902\c0\c0;\csgenericrgb\c0\c0\c100000;\csgenericrgb\c0\c45098\c0;
+\csgenericrgb\c0\c0\c74902;\csgenericrgb\c20000\c20000\c74902;\csgenericrgb\c37647\c37647\c37647;\csgenericrgb\c100000\c40000\c0;}
+\vieww18720\viewh19360\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs32 \cf0 \
+\cf2 // http://en.wikipedia.org/wiki/P\'e9rotin\cf0 \
+\cf2 // John Dunstable\cf0 \
+\
+\cf2 // TODO Classes:\cf0 \
+\cf2 // DroneGUI - for choosing whether it's an playback, performance or an installation\cf0 \
+\cf2 // Communicator - for sending and receiving OSC (from a phone, for example if an installation)\cf0 \
+\cf2 // Twitter - for allowing audience to create drones\cf0 \
+\
+\
+\cf2 // TODO: xxx.bind(yyy) - bind together drones so changing ratio, harmonics, tonic, etc. will move relatively to source.\cf0 \
+  \
+ \cf2 // TODO: allow scores to run other scores. (without stopping previous ones)\cf0 \
+ \
+\cf2 /*\
+get cursor to be at the bottom of textview:\
+\pard\pardeftab720\partightenfactor0
+
+\f1\fs24 \cf2 As far as scrolling to the end of a TextView, I have a little hack that works well:\
+\
+(provided your TextView is called postWin in this example)\
+\
+postWin.select(postWin.string.size-2,0);\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs32 \cf2 */\cf0 \
+\
+\cf2 // TODO: Machine that creates new drones\cf0 \
+\cf2 // TODO: Machine that affects amplitude of all the system\cf0 \
+\cf2 // TODO: Machine that can be live coded (using ~ for the machine name)\cf0 \
+\cf2 // TODO: make a move machine (moves drones fast around)\cf0 \
+\
+\cf2 // TODO: fix colarray and locarray for all machines (make them slower) (now in \\chords)\cf0 \
+\
+\cf2 //GUI.qt\cf0 \
+\
+\cf2 // TODO: Add Resonant low pass filter \{BLowPass.ar(Saw.ar(440), MouseX.kr(440, 440*3), MouseY.kr(0, 1.0))\}.play\cf0 \
+\cf2 // \{BPeakEQ.ar(Saw.ar(440), MouseX.kr(440, 440*3), 0.5, MouseY.kr(0, 24))\}.play\cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\fs46 \cf2 // ARNOLFINI PROJECTOR DIMENSIONS : 1600 * 1200 (65Hz)\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\fs32 \cf0 \
+\cf2 // TODO: Add (brown) noise oscillator\cf0 \
+\cf2 // TODO: Add instruments (samples) \cf0 \
+\
+\cf2 // TODO: add random movements of drones (turning directions)\cf0 \
+\
+\cf2 // TODO: timed notes (appearing or disappearing or simply crossing a speaker line?)\cf0 \
+\
+\
+\cf2 // OSCFunc.trace(true)\cf0 \
+\
+\cf2 /*\
+SynthDef(\\droneSynth,\{ arg out=0, vol=0.2, volLag=0.1, freq = 261;\
+	var drone;\
+	freq = freq.cpsmidi; // too lazy to calculate this in freq and I want GUI to show Hz\
+	drone = RLPF.ar(LFPulse.ar([freq-12, freq-12+7].midicps, 0.18, 0.1, 0.3)       // lower drone pitches\
+        				+ LFPulse.ar([freq, (freq)+7].midicps, 0.162, 0.1, 0.3),  // upper drone pitches\
+   				SinOsc.kr(0.14, 0, 10, 100).midicps)\
+	// drone 5ths\
+	+ RLPF.ar(LFPulse.ar([freq, freq+7].midicps, 0.15),\
+		SinOsc.kr(0.1, 0, 10, 72).midicps, 0.1, 0.1);	\
+	\
+Out.ar(out,\
+		Limiter.ar(drone.sum* vol, 0.9);\
+	)\
+\}).add;\
+\
+d = Synth(\\droneSynth, [\\vol, 1]);\
+d.set(\\freq, 55)\
+\
+DroneGUI.new(().add('window' -> Window.new))\
+\
+*/\cf0 \
+\
+\cf2 // TODO: visualising notes and machines at the bottom\cf0 \
+\cf2 // Save custom scales - 
+\fs18 Scale.minor.cents
+\fs32 \cf0 \
+\cf2 // it will be a method of the Drone - createScale and saveScale\cf0 \
+\
+\cf2 // TODO: Create scales from ratios in a list, like: /Users/thor/quaziir/texts\\ \\[music\\]/indian\\ music/trans22.PDF\cf0 \
+\
+\cf2 // TODO: Think about the use of Wacom with Threnoscope. See Xenakis youtube video\cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf3 var\cf0  fundamental;\
+\cf3 var\cf0  hub, speakers, interpreter, machines, states;\
+\cf3 var\cf0  tuning = \cf4 \\et12\cf0 ;\
+\cf3 var\cf0  scale = \cf4 \\minor\cf0 ;\
+\cf3 var\cf0  screendimension = \cf5 Window\cf0 .screenBounds.height;\
+\
+\cf3 var\cf0  dev = \cf6 true\cf0 ;\
+\cf3 var\cf0  channels = 8;\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 // s.meter;\cf0 \
+\
+w = \cf5 Window\cf0 (\cf7 "drone"\cf0 , \cf5 Rect\cf0 (0, 0, screendimension, screendimension), resizable:\cf6 false\cf0 , border:\cf6 false\cf0 ).front;\
+\
+if(dev.not, \{ w.fullScreen \});\
+\
+w.view.background = \cf5 Color\cf0 .white;\
+\
+\cf2 // fundamental = 
+\fs18 36.midicps; // in C
+\fs32 \cf0 \
+fundamental = 55; \cf2 // + (20.rand); // remove rand (just here to remove stress from ears)\cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf5 DroneSynths\cf0 .new(loadsamples: \cf6 false\cf0 );\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 // DroneLimiter.activate;\cf0 \
+\
+\cf2 // Drone - the key class of each drone\cf0 \
+\cf2 // DroneMachine - the class containing the diverse machines\cf0 \
+\cf2 // DroneGUI\cf0 \
+\cf2 // DroneChord / DroneSatellites / DroneGroup\cf0 \
+\cf2 // DroneCodeScore\cf0 \
+\
+hub = \cf5 DroneHub\cf0 .new( w, dev ); \cf2 // - all key data accessible to other classes\cf0 \
+states = \cf5 DroneStates\cf0 .new( hub ); \cf2 // - storing states and recording/playing scores\cf0 \
+hub.registerStates( states );\
+speakers = \cf5 DroneSpeakers\cf0 .new( hub, channels, fundamental ); \cf2 // drawing background\cf0 \
+hub.registerSpeakers( speakers );\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf8 ~drones\cf0  = \cf5 DroneController\cf0 .new( hub, tuning, scale, fundamental); \cf2 // - main interface\cf0 \
+hub.registerDrones( \cf8 ~drones\cf0  );\
+interpreter = \cf5 DroneInterpreter\cf0 .new( hub, dev:dev); \cf2 // - the 'console' for live coding\cf0 \
+hub.registerInterpreter( interpreter );\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 /*\
+\
+\
+~drones.createDrone(\\saw, 4, name:\\oso);\
+~drones.droneDict['oso'].harmonics = 4;\
+\
+~drones.droneDict.at(\\oso).harmonics = 4;\
+~drones.droneDict.at(\\oso).freq_(55);\
+~drones.droneDict.at(\\oso).createScale(4);\
+~drones.droneDict.at(\\oso).addToScale(1);\
+~drones.droneDict.at(\\oso).freq_(66);\
+~drones.droneDict.at(\\oso).addToScale(2);\
+~drones.droneDict.at(\\oso).freq_(88);\
+~drones.droneDict.at(\\oso).addToScale(3);\
+~drones.droneDict.at(\\oso).freq_(110);\
+~drones.droneDict.at(\\oso).addToScale(4);\
+~drones.droneDict.at(\\oso).saveScale(\\athortest, "A 3 note scale sounding like Philip Glass");\
+~drones.scale = \\athortest\
+~drones.droneDict.at(\\oso).degree = 1\
+~drones.droneDict.at(\\oso).degree = 2\
+~drones.droneDict.at(\\oso).degree = 3\
+~drones.droneDict.at(\\oso).degree = 4\
+~drones.droneDict.at(\\oso).degree = 5\
+~drones.droneDict.at(\\oso).degree = 6\
+~drones.droneDict.at(\\oso).degree = 7\
+~drones.droneDict.at(\\oso).degree = 8\
+~drones.droneDict.at(\\oso).degree = 9\
+~drones.droneDict.at(\\oso).degree = 10\
+~drones.droneDict.at(\\oso).degree = 11\
+~drones.droneDict.at(\\oso).degree = 12\
+~drones.droneDict.at(\\oso).ratios.size\
+\
+~drones.killAll // using the release time of the envelope\
+~drones.killAll(0) // forcing the synths to stop in 0 secs (or any other time)\
+\
+\pard\pardeftab560\partightenfactor0
+
+\fs18 \cf2 ~drones.playMIDI("/Users/thor/Downloads/WTK/s00016.mid");\
+~drones.stopMIDI\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs28 \cf2 ~drones.createSatellites(\\tri, \\minor, 4, length:120, num:10)
+\f0\fs18 \
+\pard\pardeftab560\partightenfactor0
+
+\fs32 \cf2 \
+~drones.drawscale = true\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 w.close\
+s.meter\
+s.freqscope\
+\
+~drones.drawspeakers = true\
+~drones.drawharmonics = false\
+~drones.drawscale = true\
+~drones.drawoctaves = false\
+~drones.scale = 
+\f2\fs26 \\iwato
+\f0\fs32 \
+~drones.scale = '
+\f2\fs26 bohlen-p_9' // non-octave scale not working
+\f0\fs32 \
+~drones.scale = \\yarman24_tanbur\
+~drones.scale = \\athortest\
+\
+~drones.createDrone(\\tri, 1, 2, name:\\buk, octave:4)\
+~drones.droneDict[\\buk].playRatios()\
+~drones.droneDict[\\buk].playDegrees()\
+~drones.droneDict[\\buk].playScale()\
+\
+\
+~drones.redraw\
+\
+~drones.playCodeScore(\\vello)\
+~drones.playCodeScore(\\test)\
+\
+GUI.qt\
+thisThread.randSeed = 333;\
+\
+~drones.env_([1, 0]) // backwards sound env\
+~drones.createDrone(\\saw, 1, 3, 0.1, 1, octave:3);\
+~drones.createDrone(\\saw, 4, 5, 0.2, 1);\
+\
+\
+~drones.saveState(\\ooo) // these work only atm. on editor created drones\
+~drones.loadState(\\ooo)\
+\
+\
+-- DRONE METHODS --\
+\
+--> GUI METHODS < --\
+xxx.recParam(\\ratio, 1, 5) // automate parameters of drone from GUI\
+xxx.setParam(\\ratio, 1, 5, 1) // round it to an integer\
+xxx.setParam(\\harmonics, 1, 4) // set param once\
+xxx.setParam(\\harmonics, 1, 4, 1) // round it to an integer\
+xxx.clearauto\
+xxx.auto = true // false\
+\
+xxx.addFunc(\\obo, \{|ixi| ixi.harmonics_(rrand(2, 8))\}, 2)\
+xxx.auto_(false);\
+xxx.auto_(true);\
+xxx.removeFunc(\\obo);\
+// same as addFunc, but no routine\
+xxx.interpret(\{| ixi | ixi.harmonics_(rrand(2, 8))\})\
+\
+xxx.env_([0, 1]) // backwards envelope\
+xxx.addMIDI(transp:0, time)\
+xxx.removeMIDI()\
+xxx.kill // kill it\
+xxx.kill(10) // force 10 sec release time\
+\
+keys 1-9 play indices of the drone's scale\
+\
+~drones.droneArray[0].resonance_(true)\
+~drones.droneArray[0].resonance_(3, 5)\
+~drones.droneArray[0].ratio_(3, 10)\
+\
+~drones.droneArray[0].ratio_(3/2*2, 1)\
+\
+\
+~drones.droneArray[1].type_(\\sine)\
+~drones.droneArray[0].set(\\envtime, 1)\
+\
+~drones.createDrone(\\saw, 6, 5, 0.09, 1, 50, angle: 100, speed:10, ratio:5, name:\\oso);\
+~drones.createDrone(\\saw, 1, 9, 0.09, 1, 50, angle: 200, speed:10, name:\\oo);\
+~drones.createDrone(\\saw, 4, 2, 0.09, 1, 50, angle: 300,speed:30, name:\\xx);\
+\
+~drones.defineGroup(\\loki, [ \\oso, \\oo]);\
+~drones.droneArray[2].angle\
+\
+\
+// not really used, but\
+~drones.groupDict[\\oya_grp_loki].perform(".harmonics = 3")\
+// is the same as\
+oya_grp_loki.harmonics = 3 \
+\
+\
+~drones.defineGroup(\\loks, \\oso, \\oo);\
+~drones.killAll\
+~drones.createGroup(\\loki);\
+~drones.groups;\
+\
+w.close\
+\
+~drones.createDrone(\\saw, 4, 3, 0.09, 1, 340);\
+~drones.createDrone(\\saw, 4.099, 3, 0.09, 1, 340);\
+~drones.createChord(\\saw, \\minor, 5, 2, 0.09, 1, 150);\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 360-(i*30), 20, 5*(i+1)) \}) \})\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 36-(i*3), 20, 25*(i+1)) \}) \})\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\tri, 4+i, 2, 0.3, 3, 20, 25*(i+1)) \}) \})\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\tri, 2+(8.rand), 2, 0.3, 3, 10, 36*(i+1)) \}) \})\
+10.do(\{|i| ~drones.createDrone(\\saw, 5, 2, 0.2, 5, 5, 36*(i+1) +10.rand2) \})\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\fs28 \cf2 ~drones.interpret(\{|i| ~drones.createDrone(\\saw, 4+i, 2, length:20, speed:10+i)\})\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs32 \cf2 \
+~drones.killAll\
+~drones.droneArray[0].degree_(1, 2)\
+\
+~drones.droneArray[0].resonance_(true);\
+~drones.droneArray[0].resonance_(4, 6);\
+\
+~drones.droneArray[0].ratio_(1, 0.5)\
+\
+~drones.droneArray.do(\{arg drone; drone.degree.postln;\})\
+\
+~drones.createDrone(\\saw, 2, 3, 0.1, 1, ratio:1, name:\\yoo);\
+~drones.createDrone(\\saw, 2, 3, 0.09, 1, ratio:5, name:\\apa);\
+~drones.createDrone(\\saw, 2, 3, 0.1, 1, ratio:8, name:\\ffa);\
+~drones.defineChord(\\mychord, [\\yoo, \\apa, \\ffa])\
+\
+~drones.createDrone(\\saw, 5, 3, 0.09, 1);\
+~drones.scale = \\minor;\
+\
+~drones.createMachine(\\scale, \\all, 5, 1, 1); // working\
+~drones.createMachine(\\chord, \\all, 10, 2, 2, 2); // working\
+~drones.createMachine(\\amp, \\all, 6, 0.5, 2, 1); // working\
+~drones.createMachine(\\harmonics, \\all, 30, 5, 2, 5); // working\
+ \
+~drones.killMachines\
+~drones.killMachine(\\pzi_mach)\
+~drones.machineArray[0].name\
+~drones.machineDict\
+~drones.machineArray[0].kill()\
+\
+\
+\
+~drones.droneArray.do(\{arg drone; drone.degree.postln;\})\
+\
+~drones.createMachine(\\create, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\amp, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\arpeggios, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\neutral, \\all, 10, 0.2, 1.5); // not working\
+\
+\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 2, 3, 0.1, 1);\
+~drones.createDrone(\\cub, 4, 3, 0.1, 1);\
+\
+~drones.createDrone(\\pulse, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+\
+s.volume.volume = -36 // dB\
+*/\cf0 \
+\
+\
+\cf2 //6.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 3, 30, 40*(i+1)) \})\cf0 \
+\
+\
+\cf2 // d.(\\saw, 2, 4, 0.1, 1, 300, 223)\cf0 \
+\
+\cf2 /*\
+\
+~drones.createMachine(\\amp );\
+\
+\
+~drones.tuning_(\\wcSJ)\
+\
+w.close\
+s.plotTree\
+\
+3.do(\{ ~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand) \})\
+\
+\
+~drones.createMachine(\\amp, time:1);\
+\
+~drones.createMachine(\\test, time:1);\
+~drones.createMachine(\\amp, \\aspy, time:1);\
+~drones.createMachine(\\amp, time:1);\
+\
+~drones.createMachine(\\test);\
+TempoClock.default.tempo\
+\
+s.meter\
+s.boot; DroneSynths.new; ////////////////////\
+\
+~drones.createDrone(\\saw, 5, length:, speed:-120)\
+\
+~drones.createChord(\\saw, [1, 6, 12]+24, 1)\
+~drones.createChord(\\sine, 'minor', 8, 3, 0.1)\
+\
+~drones.createSatellites(\\saw, \\iwato, 1, 2, spread: 1, num:10)\
+~drones.createSatellites(\\sine, \\minor, 2, 4, spread: 3, num:16)\
+~drones.createSatellites(\\cub, \\minor, 3, 2, spread: 1, num:16)\
+~drones.createSatellites(\\saw, \\iwato, 2, 4, spread: 1, num:16)\
+\
+~drones.killSatellites\
+.transpose_()\
+\
+\
+~drones.scale_(\\minor)\
+~drones.tuning_(\\et12)\
+\
+\
+~drones.killAll\
+~drones.chordDict\
+~drones.droneArray[0].alpha\
+~drones.names\
+\
+w.close\
+~drones.droneArray[0].setAlpha = 0.35\
+\
+~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand)\
+\
+// TODO: get rid of "angle" and just use rotation.\
+\
+3.do(\{ ~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand) \})\
+\
+~drones.selected\
+\
+~drones.droneArray[0].getName\
+~drones.droneArray[0].alpha\
+\
+~drones.droneArray[2].tuning = Tuning.\
+\
+~drones.tuning = \\vallotti\
+\
+\
+s.boot\
+s.meter\
+~drones.droneArray[0].selected = true\
+\
+// methods that change the look\
+~drones.droneArray[0].tonic_(1)\
+~drones.droneArray[0].harmonics_(3)\
+~drones.droneArray[0].harmonics_(7)\
+~drones.droneArray[0].ratio_(3)\
+~drones.droneArray[0].amp_(0.4)\
+~drones.droneArray[1].speed_(10)\
+~drones.droneArray[0].angle_(0)\
+~drones.droneArray[0].angle_(90)\
+~drones.droneArray[0].angle_(180)\
+~drones.droneArray[0].angle_(270)\
+~drones.droneArray[0].angle_(360)\
+~drones.droneArray[0].length_(50) // from 0 to 100\
+\
+\
+~drones.droneArray[0].ratio_(8)\
+~drones.droneArray[0].fundamental_(55)\
+\
+\
+~drones.droneArray[0].ratio_(1)\
+~drones.droneArray[0].ratio_(2)\
+~drones.droneArray[0].ratio_(3)\
+~drones.droneArray[0].ratio_(4)\
+~drones.droneArray[0].ratio_(5)\
+~drones.droneArray[0].ratio_(6)\
+~drones.droneArray[0].ratio_(7)\
+~drones.droneArray[0].ratio_(8)\
+~drones.droneArray[0].ratio_(9)\
+~drones.droneArray[0].ratio_(10)\
+~drones.droneArray[0].ratio_(11)\
+~drones.droneArray[0].ratio_(12)\
+~drones.droneArray[0].ratio_(13)\
+~drones.droneArray[0].ratio_(14)\
+~drones.droneArray[0].ratio_(15)\
+~drones.droneArray[0].ratio_(16)\
+~drones.droneArray[0].ratio_(17)\
+~drones.droneArray[0].ratio_(18)\
+~drones.droneArray[0].ratio_(19)\
+~drones.droneArray[0].ratio_(20)\
+~drones.droneArray[0].ratio_(21)\
+~drones.droneArray[0].ratio_(22)\
+~drones.droneArray[0].ratio_(23)\
+~drones.droneArray[0].ratio_(24)\
+~drones.droneArray[0].ratio_(25)\
+~drones.droneArray[0].ratio_(26)\
+~drones.droneArray[0].ratio_(27)\
+~drones.droneArray[0].ratio_(28)\
+~drones.droneArray[0].ratio_(29)\
+\
+~drones.droneArray[0].degree_(1)\
+~drones.droneArray[0].degree_(2)\
+~drones.droneArray[0].degree_(3)\
+~drones.droneArray[0].degree_(4)\
+~drones.droneArray[0].degree_(5)\
+~drones.droneArray[0].degree_(6)\
+~drones.droneArray[0].degree_(7)\
+~drones.droneArray[0].degree_(8)\
+~drones.droneArray[0].degree_(9)\
+~drones.droneArray[0].degree_(10)\
+~drones.droneArray[0].degree_(11)\
+~drones.droneArray[0].degree_(12)\
+~drones.droneArray[0].degree_(13)\
+~drones.droneArray[0].degree_(14)\
+~drones.droneArray[0].degree_(15)\
+~drones.droneArray[0].degree_(16)\
+~drones.droneArray[0].degree_(17)\
+~drones.droneArray[0].degree_(18)\
+~drones.droneArray[0].degree_(19)\
+~drones.droneArray[0].degree_(20)\
+~drones.droneArray[0].degree_(21)\
+~drones.droneArray[0].degree_(22)\
+~drones.droneArray[0].degree_(23)\
+~drones.droneArray[0].degree_(24)\
+~drones.droneArray[0].degree_(25)\
+~drones.droneArray[0].degree_(26)\
+~drones.droneArray[0].degree_(27)\
+~drones.droneArray[0].degree_(28)\
+~drones.droneArray[0].degree_(29)\
+\
+f = fork\{inf.do(\{ \{~drones.droneArray[0].degreeratio_(19.rand);\}.defer; 0.5.wait \}) \}.play\
+\
+~drones.droneArray[0].chordnote_(1)\
+~drones.droneArray[0].chordnote_(2)\
+~drones.droneArray[0].chordnote_(3)\
+\
+f = fork\{inf.do(\{ \{~drones.droneArray[2].chordnote_(19.rand);\}.defer; 0.5.wait \}) \}.play\
+\
+\
+// methods that change the sound\
+~drones.droneArray[0].set(\\oscfreq, 0.25)\
+~drones.droneArray[0].set(\\amp, 0.31, \\oscamp, 0.25)\
+\
+~drones.droneArray[0].set(\\oscamp, 1.0)\
+~drones.droneArray[0].set(\\freqmoddep, 1)\
+~drones.droneArray[0].set(\\freqmodarr, 1.5)\
+~drones.droneArray[0].set(\\freqmodtime, 100)\
+~drones.droneArray[0].set(\\freqmodlinegate, 1)\
+\
+\
+// set parameters of a unique drone\
+~drones.droneArray[0].set(\\freq, 444.5)\
+\
+\
+fork\{\
+	~drones.env_(0.03);\
+	inf.do(\{\
+		\{\{\
+		var name = "thorlokiman".scramble;\
+		~drones.createDrone('saw', 5.rand, 2, 0.4, 0, 80, [220, 40].choose, name:name, ratio:[1, 4, 8, 13].choose);\
+		\{~drones.droneDict[name.asSymbol].kill\}.defer(1.5.rand);\
+		\}.value\}.defer;\
+		(0.1+(1.0.rand)).wait;		\
+	\})\
+\}\
+\
+w.close\
+~drones.killAll\
+*/\cf0 \
+\
+\
+\cf2 /*\
+\
+Composing with dronescore:\
+\
+// When running a loop that will be stored in an 'interpret' dict\
+\
+		[ 6, "~drones.interpret(\{\
+			10.do(\{arg i;\
+				~drones.createDrone('tri', 10-i, rrand(4, 9), length:30, speed: rrand(-20, 20), name:'a'++i);\
+			\})\
+		\});" ],\
+\
+\
+// When using a timed process, use eval and \{\}:fork(AppClock)\
+\
+		[ 6, "~drones.eval(\{\
+			\{10.do(\{arg i;\
+				~drones.createDrone('tri', 10-i, rrand(4, 9), length:30, speed: rrand(-20, 20), name:'a'++i);\
+				~drones.droneDict[('a'++i).asSymbol].set('detune', i+1);\
+				0.3.wait; // the timed process\
+			\})\}.fork(AppClock);\
+		\})" ],\
+\
+// When running a non-threnoscope code: \
+\
+	[ 6, "~drones.eval(\{~abba = Task\{100.do(\{ \
+				Synth('dronegrain', ['out', 8.rand, 'freq', rrand(1000, 2000), 'dur', 0.0003]);\
+				0.07.wait;\
+		\})\}.play\})" ],\
+	[ 10, "~drones.eval(\{~abba.stop\})" ],\
+\
+\
+*/}

@@ -1,0 +1,246 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red191\green0\blue0;\red0\green0\blue255;
+\red0\green115\blue0;\red0\green0\blue191;\red96\green96\blue96;\red51\green51\blue191;\red255\green102\blue0;
+}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+
+\f0\fs18 \cf2 \
+\cf3 // TODO: Tuning\cf2 \
+\cf3 // TODO: code window\cf2 \
+\cf3 // TODO: Machines controls\cf2 \
+\
+\cf3 // TODO: In order to parse chords and satellites, etc., then perhaps send all through opInterpret(">" ...)\cf2 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf4 var\cf2  mainwin, controller, guiwin;\
+\cf4 var\cf2  modegui, typegui, chordgui, namegui, ratiogui, harmgui, ampgui, speedgui, lengthgui, anglegui, tuninggui, envgui, spreadgui, numbergui, freqgui;\
+\cf4 var\cf2  params = ().add(\cf5 'type'\cf2  -> \cf5 \\saw\cf2 ).add(\cf5 'type'\cf2  -> \cf5 \\saw\cf2 ).add(\cf5 'ratio'\cf2  -> 1).add(\cf5 'harmonics'\cf2  -> 3).add(\cf5 'amp'\cf2  -> 0.1).add(\cf5 'speed'\cf2  -> 1).add(\cf5 'length'\cf2  -> 30).add(\cf5 'angle'\cf2  -> 45).add(\cf5 'chord'\cf2  -> \cf5 \\minor\cf2 ).add(\cf5 'tuningratio'\cf2  -> 1).add(\cf5 'envtime'\cf2  -> 1).add(\cf5 'spread'\cf2  -> 1).add(\cf5 'number'\cf2  -> 5);\
+\cf4 var\cf2  selected = 0;\
+\cf4 var\cf2  val = 0;\
+\
+		mainwin = 
+\fs32 \cf6 Window\cf2 .new
+\fs18 ;\
+		\
+		guiwin = \cf6 Window\cf2 (\cf7 "drone"\cf2 , \cf6 Rect\cf2 (mainwin.bounds.width+100, 0, 400, 800), resizable:\cf8 true\cf2 , border:\cf8 true\cf2 ).front;\
+		\
+	\cf3 // -------- DRONES\cf2 \
+\
+		modegui = \cf6 PopUpMenu\cf2 (guiwin, \cf6 Rect\cf2 (300, 50, 80, 20))\
+				.items_([\cf7 "drone"\cf2 ,\cf7 "chord"\cf2 ,\cf7 "satellites"\cf2 ])\
+				.action_(\{ \cf4 arg\cf2  menu;\
+					params.add(\cf5 'mode'\cf2  -> menu.item);\
+\'a0 \'a0 					[menu.value, menu.item].postln;\
+				\});\
+	\
+		typegui = \cf6 PopUpMenu\cf2 (guiwin, \cf6 Rect\cf2 (300, 75, 80, 20))\
+				.items_([\cf7 "saw"\cf2 ,\cf7 "pulse"\cf2 ,\cf7 "tri"\cf2 ,\cf7 "sine"\cf2 ])\
+				.action_(\{ \cf4 arg\cf2  menu;\
+					params.add(\cf5 'type'\cf2  -> menu.item.asSymbol);\
+\'a0 \'a0 					[menu.value, menu.item].postln;\
+				\});\
+\
+		chordgui = \cf6 PopUpMenu\cf2 (guiwin, \cf6 Rect\cf2 (300, 100, 80, 20))\
+				.items_(\cf9 ~drones\cf2 .getChordDict.keys.asArray.deepCopy) \cf3 // \cf2 \
+				.action_(\{ \cf4 arg\cf2  menu;\
+					params.add(\cf5 'chord'\cf2  -> menu.item.asSymbol);\
+\'a0 \'a0 					[menu.value, menu.item].postln;\
+				\});\
+\
+		namegui = \cf6 PopUpMenu\cf2 (guiwin, \cf6 Rect\cf2 (300, 125, 80, 20))\
+				.items_([\cf7 " - new - "\cf2 ] \
+						++ \cf9 ~drones\cf2 .chordDict.keys.asArray.deepCopy\
+						++ \cf9 ~drones\cf2 .satelliteDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .interDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .droneDict.keys.asArray.deepCopy)\
+				.mouseDownAction_(\{\cf4 arg\cf2  menu; \
+					menu.items_([\cf7 " - new - "\cf2 ] \
+						++ \cf9 ~drones\cf2 .chordDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .satelliteDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .interDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .droneDict.keys.asArray.deepCopy)\})\
+				.action_(\{ \cf4 arg\cf2  menu;\
+					\cf3 // get the params from the drone and update GUI\cf2 \
+					if(menu.item != \cf7 " - new - "\cf2 , \{\
+						\cf9 ~drones\cf2 .select(menu.item);\
+						selected = \cf9 ~drones\cf2 .selected;\
+					\});\
+				\});\
+\
+		\cf6 Button\cf2 (guiwin, \cf6 Rect\cf2 (300, 150, 80, 20))\
+			.states_([[\cf7 "create"\cf2 ]])\
+			.action_(\{\
+\
+				params.postln;\
+\
+				if(modegui.value == 0, \{ \cf3 // drone\cf2 \
+					\cf9 ~drones\cf2 .createDrone(params.type, params.ratio, params.harmonics, params.amp, params.speed, params.length, params.angle, params.tuningratio, envtime: params.envtime);\
+				\});\
+				\
+				if(modegui.value == 1, \{ \cf3 // chord\cf2 \
+					\cf7 "chord"\cf2 .postln;\
+					\cf9 ~drones\cf2 .createChord(params.type, params.chord, params.ratio, params.harmonics, params.amp, params.speed, params.length, params.angle, tuningratio: params.tuningratio, envtime: params.envtime);\
+				\});\
+				\
+				if(modegui.value == 2, \{ \cf3 // satellites\cf2 \
+					\cf7 "sat"\cf2 .postln;\
+					\cf9 ~drones\cf2 .createSatellites(params.type, params.chord, params.ratio, params.harmonics, params.amp, params.speed, params.length, params.angle, params.number, params.spread, params.envtime);\
+				\});\
+				\
+			\});\
+\
+		\cf6 Button\cf2 (guiwin, \cf6 Rect\cf2 (300, 175, 80, 20))\
+			.states_([[\cf7 "kill"\cf2 ]])\
+			.action_(\{\
+				\cf4 var\cf2  command;\
+				command = namegui.item++\cf7 ".kill"\cf2 ;\
+				\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+				[\cf5 \\command\cf2 , command].postln;\
+				namegui.value_(0);\
+			\cf3 //	modegui.value.postln;\cf2 \
+			\});\
+\
+		\cf6 Button\cf2 (guiwin, \cf6 Rect\cf2 (300, 195, 80, 20))\
+			.states_([[\cf7 "update"\cf2 ]])\
+			.action_(\{\
+	\
+				namegui.items_([\cf7 " - new - "\cf2 ] \
+						++ \cf9 ~drones\cf2 .chordDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .satelliteDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .interDict.keys.asArray.deepCopy \
+						++ \cf9 ~drones\cf2 .droneDict.keys.asArray.deepCopy);\
+	\
+			\cf3 //	modegui.value.postln;\cf2 \
+			\});\
+		\
+		ratiogui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 50, 280, 20), \cf7 "ratio "\cf2 , \cf6 ControlSpec\cf2 (1, 20, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".ratio_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'ratio'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "ratio = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+						\cf3 //	~drones.droneArray[selected].ratio_(sl.value);\cf2 \
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		harmgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 75, 280, 20), \cf7 "harmonics "\cf2 , \cf6 ControlSpec\cf2 (1, 10, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".harmonics_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'harmonics'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "harmonics = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		ampgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 100, 280, 20), \cf7 "amp "\cf2 )\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".amp_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'amp'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "amp = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		speedgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 125, 280, 20), \cf7 "speed "\cf2 , \cf6 ControlSpec\cf2 (-40, 40, step:0.1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".speed_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'speed'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "speed = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		lengthgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 150, 280, 20), \cf7 "length "\cf2 , \cf6 ControlSpec\cf2 (1, 360, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".length_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'length'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "length = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		anglegui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 175, 280, 20), \cf7 "angle "\cf2 , \cf6 ControlSpec\cf2 (0, 360, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".angle_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'angle'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "angle = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		tuninggui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 200, 280, 20), \cf7 "tuningratio "\cf2 , \cf6 ControlSpec\cf2 (1, 24, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".tuningratio_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'tuningratio'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "tuningratio = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		envgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 225, 280, 20), \cf7 "envtime "\cf2 , \cf6 ControlSpec\cf2 (0.1, 10, step:0.1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".set('env',"\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'envtime'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "envtime = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		freqgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 250, 280, 20), \cf7 "freq "\cf2 , \cf6 ControlSpec\cf2 (10, 10000, step:0.01))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					\cf4 var\cf2  command = namegui.item++\cf7 ".freq_("\cf2 ++sl.value.asString++\cf7 ")"\cf2 ;\
+					params.add(\cf5 'freq'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "freq = "\cf2 .post; sl.value.postln;\
+					if(namegui.item != \cf7 " - new - "\cf2 , \{\
+						if(sl.value != val, \{\
+							\cf9 ~drones\cf2 .hub.interpreter.opInterpreter(\cf7 "> "\cf2  ++ command);\
+							val = sl.value;\
+						\});\
+					\});\
+				\});\
+\
+		spreadgui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 275, 280, 20), \cf7 "spread "\cf2 , \cf6 ControlSpec\cf2 (1, 10, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					params.add(\cf5 'spread'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "spread = "\cf2 .post; sl.value.postln;\
+				\});\
+\
+		numbergui = \cf6 EZSlider\cf2 (guiwin, \cf6 Rect\cf2 (10, 300, 280, 20), \cf7 "number "\cf2 , \cf6 ControlSpec\cf2 (1, 10, step:1))\
+				.action_(\{ \cf4 arg\cf2  sl;\
+					params.add(\cf5 'number'\cf2  -> sl.value);\
+\'a0 \'a0 					\cf7 "number = "\cf2 .post; sl.value.postln;\
+				\});\
+}

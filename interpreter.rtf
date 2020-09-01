@@ -1,0 +1,81 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red96\green96\blue96;\red0\green0\blue191;
+\red51\green51\blue191;\red191\green0\blue0;\red0\green115\blue0;\red255\green102\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+
+\f0\fs18 \cf0 \
+\cf2 var\cf0  opInterpreter;\
+\
+\cf2 var\cf0  droneDict = ();\
+\cf2 var\cf0  language = [\cf3 "drones"\cf0 ];\
+\
+w = \cf4 Window\cf0 (\cf3 "drone"\cf0 , \cf4 Rect\cf0 (800, 0, 400, 800), resizable:\cf5 true\cf0 , border:\cf5 true\cf0 ).front;\
+\cf6 // w.fullScreen;\cf0 \
+w.view.background = \cf4 Color\cf0 .white;\
+\
+t = \cf4 TextView\cf0 .new(w, \cf4 Rect\cf0 (0, 0, 400, 800)).string_(\cf3 "> "\cf0 );\
+		t.keyDownAction_(\{\cf2 |doc, char, mod, unicode, keycode |\cf0  \
+			\cf2 var\cf0  linenr, string;\
+			\cf6 // evaluating code (the next line will use .isAlt, when that is available \cf0 \
+			if((mod & 524288 == 524288) && ((keycode==124)||(keycode==123)||(keycode==125)||(keycode==126)), \{ \cf6 // alt + left or up or right or down arrow keys\cf0 \
+				linenr = doc.string[..doc.selectionStart-1].split($\\n).size;\
+				\cf6 //doc.selectLine(linenr);\cf0 \
+				string = doc.selectedString;\
+				if(keycode==123, \{ \cf6 // not 124, 125, \cf0 \
+					\cf6 //freeAgent(string);\cf0 \
+				\}, \{\
+					opInterpreter.(string);\
+				\});				\
+			\});		\
+		\});\
+\
+opInterpreter = \{\cf2 arg\cf0  string;\
+	\cf2 var\cf0  agent, dot, command;\
+	string = string[1..string.size].replace(\cf3 "   "\cf0 , \cf3 " "\cf0 ).replace(\cf3 "  "\cf0 , \cf3 " "\cf0 );\
+	if(string[0] == $ , \{string = string[1..string.size]\});\
+	dot = string.find(\cf3 "."\cf0 );\
+	agent = string[0..dot-1];\
+	command = string[dot..string.size];\
+	x = \cf5 nil\cf0 ;\
+	[\cf7 \\agent\cf0 , agent, \cf7 \\command\cf0 , command, \cf7 \\string\cf0 , string].postln;\
+	if(\cf8 ~drones\cf0 .droneDict[agent.asSymbol].isNil.not, \{\
+		\cf3 "DRONE EXISTS"\cf0 .postln;\
+		o = (\cf3 "~drones.droneDict[\\\\"\cf0 ++agent++\cf3 "]"\cf0 ++command);\
+		o.postln;\
+		try\{ x = o.interpret \}; \cf6 // TEMP: Better rempove the TRY when debugging\cf0 \
+\cf6 //		if(x.isString, \{\cf0 \
+\cf6 //			if(x.contains("Drone"), \{x = ""\});\cf0 \
+\cf6 //		\}, \{\cf0 \
+\cf6 //			x = x.asString;	\cf0 \
+\cf6 //		\}); // remove\cf0 \
+\cf6 //		t.string_(t.string++"\\n"++x++"\\n> ");\cf0 \
+		\cf6 // ~drones.parseCommand(agent, command)\cf0 \
+	\});\
+	if(agent== \cf3 "~drones"\cf0 , \{\
+		try\{ x = string.interpret \};	\cf6 // TEMP: Better rempove the TRY when debugging\cf0 \
+\cf6 //		t.string_(t.string++"\\n"++x++"\\n> ");\cf0 \
+	\});\
+	\
+		if(x.isString, \{\
+			if(x.contains(\cf3 "a Drone"\cf0 ), \{x = \cf3 ""\cf0 \});\
+		\}, \{\
+			x = x.asString;	\
+		\}); \cf6 // remove\cf0 \
+		\cf6 //if(x.isNil, \{x = "DroneMachines: Command not found"\});\cf0 \
+		t.string_(t.string++\cf3 "\\n"\cf0 ++x++\cf3 "\\n> "\cf0 );\
+			\
+\}\
+\
+\cf6 /*\
+loki.scaleDegree_(1)\
+\
+where loki = droneArray[dronedict.at(\\loki)].scaleDegree_();\
+\
+if(dronedict.contains(agent), \
+else\
+if(globalcommand array contains (agent)\
+else\
+print ("error, dronemachines does not understand this command")\
+\
+*/}

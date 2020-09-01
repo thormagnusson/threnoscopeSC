@@ -1,0 +1,360 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red191\green0\blue0;\red0\green0\blue255;\red0\green115\blue0;
+\red0\green0\blue191;\red51\green51\blue191;\red96\green96\blue96;\red255\green102\blue0;}
+\vieww14380\viewh14040\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+
+\f0\fs18 \cf0 \
+\cf2 // TODO: make an UNDO function\cf0 \
+\
+\cf2 // TODO Classes:\cf0 \
+\cf2 // DroneGUI - for choosing whether it's an playback, performance or an installation\cf0 \
+\cf2 // Communicator - for sending and receiving OSC (from a phone, for example if an installation)\cf0 \
+\cf2 // Twitter - for allowing audience to create drones\cf0 \
+\
+\
+\
+\cf2 // TODO: Machine that creates new drones\cf0 \
+\cf2 // TODO: Machine that affects amplitude of all the system\cf0 \
+\cf2 // TODO: Machine that can be live coded (using ~ for the machine name)\cf0 \
+\cf2 // TODO: make a move machine (moves drones fast around)\cf0 \
+\
+\
+\cf2 // BUG: fix chord transpose_ and interval_\cf0 \
+\
+\
+\cf2 // TODO: fix colarray and locarray for all machines (make them slower) (now in \\chords)\cf0 \
+\
+\cf2 //GUI.qt\cf0 \
+\
+\cf2 // TODO: Add Resonant low pass filter \{BLowPass.ar(Saw.ar(440), MouseX.kr(440, 440*3), MouseY.kr(0, 1.0))\}.play\cf0 \
+\cf2 // \{BPeakEQ.ar(Saw.ar(440), MouseX.kr(440, 440*3), 0.5, MouseY.kr(0, 24))\}.play\cf0 \
+\
+\
+\cf2 // TODO: Allow for calculations in interpreter\cf0 \
+\cf2 // TODO: Add (brown) noise oscillator\cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf3 var\cf0  fundamental;\
+\cf3 var\cf0  hub, speakers, interpreter, machines, states;\
+\cf3 var\cf0  tuning = \cf4 \\et12\cf0 ;\
+\cf3 var\cf0  scale = \cf4 \\minor\cf0 ;\
+\cf3 var\cf0  screendimension = \cf5 Window\cf0 .screenBounds.height;\
+\
+\cf3 var\cf0  dev = \cf6 true\cf0 ;\
+\cf3 var\cf0  channels = 2;\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf2 // s.meter;\cf0 \
+\
+w = \cf5 Window\cf0 (\cf7 "drone"\cf0 , \cf5 Rect\cf0 (0, 0, screendimension, screendimension), resizable:\cf6 false\cf0 , border:\cf6 false\cf0 ).front;\
+\
+if(dev.not, \{ w.fullScreen \});\
+\
+w.view.background = \cf5 Color\cf0 .white;\
+\
+fundamental = 55 + (20.rand); \cf2 // remove rand (just here to remove stress from ears)\cf0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf5 DroneSynths\cf0 .new(loadsamples: \cf6 false\cf0 );\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf2 // DroneLimiter.activate;\cf0 \
+\
+\cf2 // Drone\cf0 \
+\cf2 // DroneMachine\cf0 \
+\cf2 // DroneStates\cf0 \
+\
+hub = \cf5 DroneHub\cf0 .new( w );\
+states = \cf5 DroneStates\cf0 .new( hub );\
+hub.registerStates( states );\
+speakers = \cf5 DroneSpeakers\cf0 .new( hub, channels, fundamental ); \cf2 // nr channels\cf0 \
+hub.registerSpeakers( speakers );\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf8 ~drones\cf0  = \cf5 DroneController\cf0 .new( hub, tuning, scale, fundamental);\
+hub.registerDrones( \cf8 ~drones\cf0  );\
+interpreter = \cf5 DroneInterpreter\cf0 .new( hub, dev:dev);\
+hub.registerInterpreter( interpreter );\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf2 /*\
+m = Window.new("vello", Rect(100, 1000, 640, 480)).front;\
+x = SCMovieView.new(m, Rect(0,0, 640, 480));\
+x.path_(\cf0 "/Users/thor/quaziir/Projects/Vello/VELLO final master.mp4"\cf2 );\
+\
+x.start;\
+~drones.playComposedScore(\\vello);\
+TempoClock.new.sched(0, \{arg beat; beat.postln; 1\});\
+s.record;\
+\
+Pbind(\\instrument, \\default, \\freq, Pseq([1888, 1000, 1000, 1000], inf), \\dur, 1).play;\
+TempoClock.default.tempo = 1;\
+w.close\
+*/\cf0  \
+ \
+\cf2 /*\
+~drones.killAll\
+m.close\
+\
+w.close\
+s.meter\
+s.freqscope\
+\
+\
+ ~drones.playComposedScore(\\test)\
+\
+GUI.qt\
+thisThread.randSeed = 333;\
+~drones.createDrone(\\saw, 1, 3, 0.1, 1);\
+~drones.createDrone(\\saw, 4, 5, 0.2, 1);\
+\
+~drones.droneArray[4].resonance_(2, 4)\
+~drones.droneArray[8].ratio_(2, 10)\
+\
+\
+~drones.droneArray[0].type_(\\tri)\
+~drones.droneArray[0].set(\\env, 1)\
+harmonics_(5)\
+\
+~drones.createDrone(\\saw, 2, 3, 0.09, 1, 340);\
+~drones.createDrone(\\saw, 4.099, 3, 0.09, 1, 340);\
+~drones.createChord(\\saw, \\minor, 5, 2, 0.09, 1, 150);\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 360-(i*30), 20, 25*(i+1)) \}) \})\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 36-(i*3), 20, 25*(i+1)) \}) \})\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\tri, 4+i, 2, 0.3, 3, 20, 25*(i+1)) \}) \})\
+\
+~drones.interpret(\{ 10.do(\{|i| ~drones.createDrone(\\tri, 2+(8.rand), 2, 0.3, 3, 10, 36*(i+1)) \}) \})\
+10.do(\{|i| ~drones.createDrone(\\saw, 5, 2, 0.2, 5, 5, 36*(i+1) +10.rand2) \})\
+\
+~drones.killAll\
+~drones.droneArray[0].scaledegree_(1, 2)\
+\
+~drones.droneArray[0].resonance_(true);\
+~drones.droneArray[0].resonance_(4, 6);\
+\
+~drones.droneArray[0].tuningratio_(1, 0.5)\
+\
+~drones.droneArray.do(\{arg drone; drone.scaledegree.postln;\})\
+\
+~drones.createDrone(\\saw, 2, 3, 0.1, 1);\
+~drones.createDrone(\\saw, 2, 3, 0.09, 1);\
+~drones.scale = \\minor;\
+\
+~drones.createMachine(\\scale, \\all, 115, 1, 1); // working\
+~drones.createMachine(\\chord, \\all, 10, 2, 2, 2); // working\
+~drones.createMachine(\\amp, \\all, 60, 5, 2, 1); // working\
+~drones.createMachine(\\harmonics, \\all, 30, 5, 2, 5); // working\
+ \
+~drones.killMachines\
+~drones.killMachine(\\pzi_mach)\
+~drones.machineArray[0].name\
+~drones.machineDict\
+~drones.machineArray[0].kill()\
+\
+\
+\
+~drones.droneArray.do(\{arg drone; drone.scaledegree.postln;\})\
+\
+~drones.createMachine(\\create, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\amp, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\arpeggios, \\all, 10, 0.2, 1.5); // not working\
+~drones.createMachine(\\neutral, \\all, 10, 0.2, 1.5); // not working\
+\
+\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 2, 3, 0.1, 1);\
+~drones.createDrone(\\cub, 4, 3, 0.1, 1);\
+\
+~drones.createDrone(\\pulse, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+~drones.createDrone(\\tri, 4, 3, 0.1, 1);\
+\
+s.volume.volume = -36 // dB\
+*/\cf0 \
+\
+\
+\cf2 //6.do(\{|i| ~drones.createDrone(\\saw, 1+i, 3, 0.3, 3, 30, 40*(i+1)) \})\cf0 \
+\
+\
+\cf2 // d.(\\saw, 2, 4, 0.1, 1, 300, 223)\cf0 \
+\
+\cf2 /*\
+\
+~drones.createMachine(\\amp );\
+\
+\
+~drones.tuning_(\\wcSJ)\
+\
+w.close\
+s.plotTree\
+\
+3.do(\{ ~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand) \})\
+\
+\
+~drones.createMachine(\\amp, time:1);\
+\
+~drones.createMachine(\\test, time:1);\
+~drones.createMachine(\\amp, \\aspy, time:1);\
+~drones.createMachine(\\amp, time:1);\
+\
+~drones.createMachine(\\test);\
+TempoClock.default.tempo\
+\
+s.meter\
+s.boot; DroneSynths.new; ////////////////////\
+\
+~drones.createDrone(\\sine, 8)\
+\
+~drones.createChord(\\saw, [1, 6, 12]+24, 1)\
+~drones.createChord(\\sine, 'minor', 8, 3, 0.1)\
+\
+~drones.createSatellites(\\saw, \\iwato, 2, 4, spread: 1, num:16)\
+~drones.createSatellites(\\sine, \\minor, 2, 4, spread: 3, num:16)\
+~drones.createSatellites(\\cub, \\minor, 3, 2, spread: 1, num:16)\
+~drones.createSatellites(\\saw, \\iwato, 2, 4, spread: 1, num:16)\
+\
+~drones.killSatellites\
+.transpose_()\
+\
+\
+~drones.scale_(\\minor)\
+~drones.tuning_(\\et12)\
+\
+\
+~drones.killAll\
+~drones.chordDict\
+~drones.droneArray[0].alpha\
+~drones.names\
+\
+w.close\
+~drones.droneArray[0].setAlpha = 0.35\
+\
+~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand)\
+\
+// TODO: get rid of "angle" and just use rotation.\
+\
+3.do(\{ ~drones.createDrone(\\saw, 1+(8.rand), 1+(8.rand), 0.3, 2.0.rand, 330.rand, 320.rand) \})\
+\
+~drones.selected\
+\
+~drones.droneArray[0].getName\
+~drones.droneArray[0].alpha\
+\
+~drones.droneArray[2].tuning = Tuning.\
+\
+~drones.tuning = \\vallotti\
+\
+\
+s.boot\
+s.meter\
+~drones.droneArray[0].selected = true\
+\
+// methods that change the look\
+~drones.droneArray[0].ratio_(2)\
+~drones.droneArray[0].harmonics_(3)\
+~drones.droneArray[0].harmonics_(7)\
+~drones.droneArray[0].ratio_(3)\
+~drones.droneArray[0].amp_(0.4)\
+~drones.droneArray[1].speed_(10)\
+~drones.droneArray[0].angle_(0)\
+~drones.droneArray[0].angle_(90)\
+~drones.droneArray[0].angle_(180)\
+~drones.droneArray[0].angle_(270)\
+~drones.droneArray[0].angle_(360)\
+~drones.droneArray[0].length_(50) // from 0 to 100\
+\
+\
+~drones.droneArray[0].ratio_(8)\
+~drones.droneArray[0].fundamental_(55)\
+\
+\
+~drones.droneArray[0].tuningratio_(1)\
+~drones.droneArray[0].tuningratio_(2)\
+~drones.droneArray[0].tuningratio_(3)\
+~drones.droneArray[0].tuningratio_(4)\
+~drones.droneArray[0].tuningratio_(5)\
+~drones.droneArray[0].tuningratio_(6)\
+~drones.droneArray[0].tuningratio_(7)\
+~drones.droneArray[0].tuningratio_(8)\
+~drones.droneArray[0].tuningratio_(9)\
+~drones.droneArray[0].tuningratio_(10)\
+~drones.droneArray[0].tuningratio_(11)\
+~drones.droneArray[0].tuningratio_(12)\
+~drones.droneArray[0].tuningratio_(13)\
+~drones.droneArray[0].tuningratio_(14)\
+~drones.droneArray[0].tuningratio_(15)\
+~drones.droneArray[0].tuningratio_(16)\
+~drones.droneArray[0].tuningratio_(17)\
+~drones.droneArray[0].tuningratio_(18)\
+~drones.droneArray[0].tuningratio_(19)\
+~drones.droneArray[0].tuningratio_(20)\
+~drones.droneArray[0].tuningratio_(21)\
+~drones.droneArray[0].tuningratio_(22)\
+~drones.droneArray[0].tuningratio_(23)\
+~drones.droneArray[0].tuningratio_(24)\
+~drones.droneArray[0].tuningratio_(25)\
+~drones.droneArray[0].tuningratio_(26)\
+~drones.droneArray[0].tuningratio_(27)\
+~drones.droneArray[0].tuningratio_(28)\
+~drones.droneArray[0].tuningratio_(29)\
+\
+~drones.droneArray[0].scaledegree_(1)\
+~drones.droneArray[0].scaledegree_(2)\
+~drones.droneArray[0].scaledegree_(3)\
+~drones.droneArray[0].scaledegree_(4)\
+~drones.droneArray[0].scaledegree_(5)\
+~drones.droneArray[0].scaledegree_(6)\
+~drones.droneArray[0].scaledegree_(7)\
+~drones.droneArray[0].scaledegree_(8)\
+~drones.droneArray[0].scaledegree_(9)\
+~drones.droneArray[0].scaledegree_(10)\
+~drones.droneArray[0].scaledegree_(11)\
+~drones.droneArray[0].scaledegree_(12)\
+~drones.droneArray[0].scaledegree_(13)\
+~drones.droneArray[0].scaledegree_(14)\
+~drones.droneArray[0].scaledegree_(15)\
+~drones.droneArray[0].scaledegree_(16)\
+~drones.droneArray[0].scaledegree_(17)\
+~drones.droneArray[0].scaledegree_(18)\
+~drones.droneArray[0].scaledegree_(19)\
+~drones.droneArray[0].scaledegree_(20)\
+~drones.droneArray[0].scaledegree_(21)\
+~drones.droneArray[0].scaledegree_(22)\
+~drones.droneArray[0].scaledegree_(23)\
+~drones.droneArray[0].scaledegree_(24)\
+~drones.droneArray[0].scaledegree_(25)\
+~drones.droneArray[0].scaledegree_(26)\
+~drones.droneArray[0].scaledegree_(27)\
+~drones.droneArray[0].scaledegree_(28)\
+~drones.droneArray[0].scaledegree_(29)\
+\
+f = fork\{inf.do(\{ \{~drones.droneArray[0].scaledegree_(19.rand);\}.defer; 0.5.wait \}) \}.play\
+\
+~drones.droneArray[0].chordnote_(1)\
+~drones.droneArray[0].chordnote_(2)\
+~drones.droneArray[0].chordnote_(3)\
+\
+f = fork\{inf.do(\{ \{~drones.droneArray[2].chordnote_(19.rand);\}.defer; 0.5.wait \}) \}.play\
+\
+\
+// methods that change the sound\
+~drones.droneArray[0].set(\\oscfreq, 0.25)\
+~drones.droneArray[0].set(\\amp, 0.31, \\oscamp, 0.25)\
+\
+~drones.droneArray[0].set(\\oscamp, 0.0)\
+~drones.droneArray[0].set(\\freqmoddep, 1)\
+~drones.droneArray[0].set(\\freqmodarr, 1.5)\
+~drones.droneArray[0].set(\\freqmodtime, 100)\
+~drones.droneArray[0].set(\\freqmodlinegate, 1)\
+\
+\
+// set parameters of a unique drone\
+~drones.droneArray[0].set(\\freq, 444.5)\
+\
+\
+\
+*/\cf0 \
+}
