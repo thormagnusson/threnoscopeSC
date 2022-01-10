@@ -982,19 +982,20 @@ DroneController {
 	}
 
 	tunings {
-		var tuningstring = "\n| ";
-		TuningInfo.tunings.keys.asArray.sort.do({arg tuning; tuningstring = tuningstring ++ tuning ++ " | " });
-		tuningstring = tuningstring ++ "\n";
+		var tunings, tuningstring = "";
+		tunings = Tuning.directory.asArray;
+		tunings.do({ |tuning| tuningstring = tuningstring ++ "" ++ tuning.asString });
+		tuningstring = tuningstring ++ "";
 		{if(hub.post, {hub.interpreter.postview.string_(tuningstring)})}.defer;
 		^tuningstring;
 	}
-	
+
 	scales {
 		var scales, scalesstring;
 		scalesstring = "";
-		scales = ScaleInfo.scales.keys.asArray;
-		scales.do({ |scale| scalesstring = scalesstring ++ " | " ++ scale.asString });
-		scalesstring = scalesstring ++ " | ";
+		scales = Scale.directory.asArray;
+		scales.do({ |scale| scalesstring = scalesstring ++ "" ++ scale.asString });
+		scalesstring = scalesstring ++ "";
 		{if(hub.post, {hub.interpreter.postview.string_(scalesstring)})}.defer;
 		^scalesstring
 	}
