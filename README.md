@@ -14,7 +14,7 @@ Enjoy!
 ## Installation Guide
 The procedure is the same on MacOs, Linux and Windows. 
 
-Inside Supercollider type:
+Inside Supercollider type and evaluate:
 
 ```SuperCollider
 Quarks.install(‘https://github.com/thormagnusson/threnoscopeSC.git’);
