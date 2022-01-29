@@ -13,25 +13,16 @@ Enjoy!
 
 ## Installation Guide
 The procedure is the same on MacOs, Linux and Windows. 
+For MacOs Users, a standalone App is also available at: https://thormagnusson.github.io/threnoscope/
 
 Inside Supercollider type and evaluate:
 
 ```SuperCollider
 Quarks.install(‘https://github.com/thormagnusson/threnoscopeSC.git’);
 ```
-
-Open the User Support Directory. 
-Create a folder named **threnoscope**. 
-Inside the threnoscope folder create three folders:
-- scl
-- scl_user
-- samples
-
-Inside the samples folder create an empty file named **_samples.scd** (include the underscore). 
-
 Recompile the class library.
 
-Inside Supercollider type and evaluate:
+Inside SuperCollider type and evaluate: 
 
 ```SuperCollider
 s.boot;
@@ -39,8 +30,13 @@ ThrenoScope.new(2);
 ```
 
 If everything works correctly this should launch the Threnoscope!
+Type this line inside the Threnoscope editor to check if everything works:
+
+~drones.createDrone(\saw, 2, 3);
+
+Now drone on!
 
 Go to:
 https://thormagnusson.github.io/threnoscope/ 
 
-for documentation, reference and tutorials! 
+for more documentation, reference and tutorials! 
