@@ -18,7 +18,7 @@ For MacOs Users, a standalone App is also available at: https://thormagnusson.gi
 Inside Supercollider type and evaluate:
 
 ```SuperCollider
-Quarks.install(‘https://github.com/thormagnusson/threnoscopeSC.git’);
+Quarks.install("https://github.com/thormagnusson/threnoscopeSC.git");
 ```
 Recompile the class library.
 
@@ -32,7 +32,9 @@ ThrenoScope.new(2);
 If everything works correctly this should launch the Threnoscope!
 Type this line inside the Threnoscope editor to check if everything works:
 
+```
 ~drones.createDrone(\saw, 2, 3);
+```
 
 Now drone on!
 
