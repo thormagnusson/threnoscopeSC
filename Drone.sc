@@ -108,7 +108,7 @@ Drone {
 			{\klank} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
 			{\gendy} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
 		    {\pad} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
-		    {\padw} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
+		   /* {\padw} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }*/
 			{\atom}		{ this.initAtom; {this.startSynth()}.defer; }
 			{
 				buffer = Buffer.read(Server.default, DroneSynths.bufferPath(type, freq), action:{ this.startSynth() }) ; // samples
@@ -1180,7 +1180,7 @@ Drone {
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-			}
+			/*}
 		{ \padw     }{
 				("\nfreq : "++ synthParams[\freq].asString ++
 				"\nharmonics : " ++ synthParams[\harmonics].asString ++
@@ -1195,9 +1195,9 @@ Drone {
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-
+*/
 			};
-	} // \padw added by Etol.
+	} // \padw is a tryout don't use it.
 
 	// ---  below is all synth creation and drawing
 
@@ -1303,10 +1303,10 @@ Drone {
 			}
 			{\pad}{
 				(type:\pad, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
-			}
+			} /*
 		    {\padw}{
 				(type:\padw, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
-			}{ // everything else
+			}*/{ // everything else
 				(type:type, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			};
 	}
@@ -1358,9 +1358,9 @@ Drone {
 			{\pad}{
 				Synth(\dronepad, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-		    {\padw}{
+		    /*{\padw}{
 				Synth(\dronepadw, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
-				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
+				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }*/
 			{ var nearestFreq, midinote; // else, it's a sample
 				var noteData, startLoop, endLoop;
 				noteData = DroneSynths.noteData(type, freq);

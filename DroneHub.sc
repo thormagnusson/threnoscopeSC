@@ -22,7 +22,7 @@ DroneHub {
 	*new { arg window, argmode, argscale, argfundamental, threnoscopeColor, key, channels, appPath;
 		^super.new.initDroneHub(window, argmode, argscale, argfundamental, threnoscopeColor, key, channels, appPath);
 	}
-		
+
 	initDroneHub { |argwindow, argmode, argscale, argfundamental, argThrenoscopeColor, argKey, argchannels, argappPath |
 		window = argwindow;
 		mode = argmode;
@@ -46,17 +46,17 @@ DroneHub {
 		// FOR STANDALONE BINARY ____________________
 		//pathtoscalafiles = appPath++"/scl/";
 		//pathtouserscalafiles = appPath++"/scl_user/";
-		
+
 		// FOR RUNNING Threnoscope in SC as classes_______________
-		pathtoscalafiles = Platform.userAppSupportDir++"/threnoscope/scl/";
-		pathtouserscalafiles = Platform.userAppSupportDir++"/threnoscope/scl_user/";
-		
-		
+		pathtoscalafiles = Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scl/";
+		pathtouserscalafiles = Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scl_user/";
+
+
 		"_______________".postln;
 		[\pathtoscalafiles, pathtoscalafiles].postln;
 		[\pathtouserscalafiles, pathtouserscalafiles].postln;
 
-		switch(mode) 
+		switch(mode)
 			{\perform} { // regular perform mode with terminal and console
 				post = true;
 				}
@@ -73,7 +73,7 @@ DroneHub {
 				post = false;
 			};
 	}
-	
+
 	registerSpeakers { |argspeakers|
 		speakers = argspeakers;
 	}
@@ -89,13 +89,13 @@ DroneHub {
 	registerStates { |argstates|
 		states = argstates;
 	}
-	
-	
+
+
 	getChordDict {
 		^().put('major', [0, 4, 7]).put('minor', [0, 3, 7]).put('5', [0, 7]).put('dominant7th', [0, 4, 7, 10]).put('major7th', [0, 4, 7, 11]).put('minor7th', [0, 3, 7, 10]).put('minorMajor7th', [0, 3, 7, 11]).put('sus4', [0, 5, 7]).put('sus2', [0, 2, 7]).put('6', [0, 4, 7, 9]).put('minor6', [0, 3, 7, 9]).put('9', [0, 2, 4, 7, 10]).put('minor9', [0, 2, 3, 7, 10]).put('major9', [0, 2, 4, 7, 11]).put('minorMajor9', [0, 2, 3, 7, 11]).put('11', [0, 2, 4, 5, 7, 11]).put('minor11', [0, 2, 3, 5, 7, 10]).put('major11', [0, 2, 4, 5, 7, 11]).put('minorMajor11', [0, 2, 3, 5, 7, 11]).put('13', [0, 2, 4, 7, 9, 10]).put('minor13', [0, 2, 3, 7, 9, 10]).put('major13', [0, 2, 4, 7, 9, 11]).put('minorMajor13', [0, 2, 3, 7, 9, 11]).put('add9', [0, 2, 4, 7]).put('minorAdd9', [0, 2, 3, 7]).put('6add9', [0, 2, 4, 7, 9]).put('minor6add9', [0, 2, 3, 7, 9]).put('dominant7add11', [0, 4, 5, 7, 10]).put('major7add11', [0, 4, 5, 7, 11]).put('minor7add11', [0, 3, 5, 7, 10]).put('minorMajor7add11', [0, 3, 5, 7, 11]).put('dominant7add13', [0, 4, 7, 9, 10]).put('major7add13', [0, 4, 7, 9, 11]).put('minor7add13', [0, 3, 7, 9, 10]).put('minorMajor7thAdd13', [0, 3, 7, 9, 11]).put('7b5', [0, 4, 6, 10]).put('7s5', [0, 4, 8, 10]).put('7b9', [0, 1, 4, 7, 10]).put('7s9', [0, 3, 4, 7, 10]).put('7s5b9', [0, 1, 4, 8, 10]).put('m7b5', [0, 3, 6, 10]).put('m7s5', [0, 3, 8, 10]).put('m7b9', [0, 1, 3, 7, 10]).put('9s11', [0, 2, 4, 6, 7, 10]).put('9b13', [0, 2, 4, 7, 8, 10]).put('6sus4', [0, 5, 7, 9]).put('7sus4', [0, 5, 7, 10]).put('major7sus4', [0, 5, 7, 11]).put('9sus4', [0, 2, 5, 7, 10]).put('major9sus4', [0, 2, 5, 7, 11])
 	}
-	
-	
+
+
 	postDroneState {arg selectedName, selected;
 		var string;
 		Document.listener.string = ""; // clear post window

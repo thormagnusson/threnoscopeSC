@@ -476,6 +476,7 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 			signal = signal * envl * AmpComp.kr(freq, 55);
 			Out.ar(out, signal);
 		}).add;
+/*
 ///First New Synth (a try out)
 		SynthDef(\dronepadw, {arg freq=110, harmonics=2, oscfreq=0.1, oscamp=0, out=0, amp=0.3, gate=1,
 			env=#[3,3], dep=1, arr=2, time=10, fgate=0, detune=0, resonance=1, resamp=0, doneAction=2;
@@ -494,6 +495,7 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 			signal = signal * envl * AmpComp.kr(freq, 55);
 			Out.ar(out, signal);
 		}).add;
+*/
 
 
 
@@ -520,7 +522,7 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 		// STANDALONE
 		path = hub.appPath ++"/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
 		// CLASSES
-		path = Platform.userAppSupportDir ++"/threnoscope/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
+		path = Platform.userAppSupportDir ++"/downloaded/quarks/threnoscopeSC/threnoscope/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
 
 		[\nearestFreq, nearestFreq, \sample, path].postln;
 		^path;
@@ -554,7 +556,7 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 	  	// file = File(hub.appPath++"/samples/_samples.scd","r");
 
 		// RUNNING TS AS CLASSES IN SC
-		file = File(Platform.userAppSupportDir++"/threnoscope/samples/_samples.scd","r");
+		file = File(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/samples/_samples.scd","r");
 
 
 
