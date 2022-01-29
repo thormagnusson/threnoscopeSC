@@ -1,0 +1,18 @@
+[ 123.rand, [
+	[ 0, {~drones.env_([24,5])} ],
+	[ 1, {~drones.createDrone(\eliane, 2, amp:0.2, name:\eli2, harmonics: 4, speed:0, length:220, angle: 20)} ],
+	[ 20, {~drones.createDrone(\eliane, 1, amp:0.1, name:\eli1, speed: 0, length:320, angle: 100)} ],
+	[ 30, {~eli1.harmonics_(10, 20)} ],
+	[ 40, {~eli1.resonance = true} ],
+	[ 50, {~eli2.harmonics_(2, 20)} ],
+	[ 70, {~eli1.resonance_(20, 30)} ],
+	[ 70, {~eli1.resonance_(20, 30)} ],
+	[ 110, {~drones.createDrone(\eliane, 3, amp:0.2, name:\eli3a, speed: 5, length:120, angle: 230)} ],
+	[ 140, {~drones.createDrone(\eliane, 3, amp:0.2, name:\eli3b, speed: -5, length:120, angle: 230)} ],
+	[ 220, {~eli1.resonance_(2, 30)} ],
+	[ 330, {~eli2.kill} ],
+	[ 340, {~eli1.resonance_(1, 15)} ],
+	[ 350, {~eli3a.kill} ],
+	[ 360, {~eli3b.kill} ],
+	[ 400, {~eli1.kill} ]
+]]
