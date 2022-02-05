@@ -4,7 +4,7 @@ Drone {
 	var thisatomnumber = 0;
 
 	var <>dying; // experimental
-	var window, hub, <>point; 
+	var window, hub, <>point;
 	var strokeColor, fillColor, updateFunc, <rotation;
 	var innersize, outersize, resonsize, <speed, <length;
 	var synth, synthgroup, synths, <synthParams;
@@ -16,11 +16,11 @@ Drone {
 	var <ratios, <tuning, <ratio, <scaledegrees, <scale, <degree, <scalesize, <tuningsize, <chord, octaveRatio, scaleTonic;
 	var <>autoTaskDict;
 	var buffer;
-	
-	*new { arg hub, tuning, scale, fundamental; 
+
+	*new { arg hub, tuning, scale, fundamental;
 		^super.new.initDrone(hub, tuning, scale, fundamental);
 	}
-	
+
 	initDrone { | arghub, argtuning, argscale, argfundamental |
 		hub = arghub;
 		window = hub.window;
@@ -38,7 +38,7 @@ Drone {
 		freq = 55; // temp
 	}
 
-	createDrone { | argtype=\saw, argtonic=1, argharmonics=2, argamp=0.2, argspeed=100, arglength=6, argangle=0, argdegree=1, argratio=1, argenv, argoctave, argnote | 
+	createDrone { | argtype=\saw, argtonic=1, argharmonics=2, argamp=0.2, argspeed=100, arglength=6, argangle=0, argdegree=1, argratio=1, argenv, argoctave, argnote |
 		var step = 0.05/argenv[0];
 		if(argenv[0] < 0.5, {
 			ampMult = 1; // no need to make the colour appear slowly
@@ -56,20 +56,20 @@ Drone {
 		env = argenv ? [3,3];
 		octave = argoctave ? 1;
 		point = Point(hub.middle, hub.middle);
-		synthParams = this.initSynthParams(tonic, freq, harmonics, amp, degree, octave, env); 
-		
+		synthParams = this.initSynthParams(tonic, freq, harmonics, amp, degree, octave, env);
+
 		this.scale_(scale); // setting the scaledegrees
 		this.tuning_(tuning);
 		this.chord_(\minor); // minor is the default chord
 		note = argnote;
-		
+
 		if(degree != 1, {
 			this.degree_(degree);
 			//ratio = scaledegrees.indexOf((ratio-0.2).nearestInList(scaledegrees)); // if no degree has been passed, I force the degree to be the nearest in scale
 		});
 
 		\deb1.postln;
-		
+
 		if(note.isNil.not, {
 			[\hubkey, hub.key].postln;
 			[\note, note].postln;
@@ -79,7 +79,7 @@ Drone {
 			if(ratio == 0, {ratio = 12});
 			[\ratio, ratio].postln;
 		});
-			
+
 		if(ratio != 1, {
 			// degree takes precedence over ratio in the Threnoscope (if user is passing ratio>1 AND degree>1)
 			degree = degree ? scaledegrees.indexOf((ratio-0.2).nearestInList(scaledegrees)); // if no degree has been passed, I force the degree to be the nearest in scale
@@ -107,33 +107,35 @@ Drone {
 			{\noise} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
 			{\klank} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
 			{\gendy} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
+		    {\pad} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }
+		   /* {\padw} 		{ fillColor = Color.new( rrand(0.1, 0.7), rrand(0.1, 0.7), rrand(0.1, 0.2) ); this.startSynth() }*/
 			{\atom}		{ this.initAtom; {this.startSynth()}.defer; }
 			{
 				buffer = Buffer.read(Server.default, DroneSynths.bufferPath(type, freq), action:{ this.startSynth() }) ; // samples
 			};
-		
+
 		fillColor = Color.rand(0.1, 0.7);
-	
+
 		\deb2.postln;
 
 	}
-	
-	
+
+
 	initAtom { // an experimental method for Chris Kiefer's Atom software.
 		var message;
 		atomcount = atomcount + 1;
 		thisatomnumber = atomcount;
 		[\atomcount, atomcount].postln;
-		
+
  		if(atomNetAddr.isNil, { atomNetAddr = NetAddr("127.0.0.1", 8111) });
- 		
- 		Synth(\atom, [ \atomnumber, thisatomnumber, \freq, freq, \amp, amp, \harmonics, harmonics], synthgroup); 
-		
+
+ 		Synth(\atom, [ \atomnumber, thisatomnumber, \freq, freq, \amp, amp, \harmonics, harmonics], synthgroup);
+
 		if(oscresp.isNil, { // only create one responder
-			oscresp = OSCFunc({ |msg| 
+			oscresp = OSCFunc({ |msg|
 				var message, data;
 				"ATOM SYNTH : ".post; msg.postln;
-				
+
 				switch(msg[4].asInteger)
 				{0}{ message = '/freq' }
 				{1}{ message = '/amp' }
@@ -145,13 +147,13 @@ Drone {
 				{7}{ message = '/loopEnd' }
 				{8}{ message = '/snapFreqs'; msg = msg[..4] ++ msg[5..].select(_>0).flatten; }
 				{9}{ message = '/snapPull' };
-				 
+
 				[\message, message].postln;
-				
+
 				msg.postln;
 				data = if(msg[4].asInteger == 8, {msg[5..]}, { msg[5].asFloat });
 				[\data, data].postln;
-				atomNetAddr.sendMsg( message, msg[3].asInteger, *data); 
+				atomNetAddr.sendMsg( message, msg[3].asInteger, *data);
 			}, '/atom');
 		});
 	}
@@ -161,46 +163,46 @@ Drone {
 		~ooo.harmonics = 3+(0.1.rand)
 		~ooo.amp = 0.3+(0.1.rand)
 		~ooo.freq = 354+(0.1.rand)
-		~ooo.set(\probability, 0.36+(0.1.rand) ) 
-		~ooo.set(\rate, 1+(0.1.rand) ) 
-		~ooo.set(\pitch, 0.35+(0.1.rand) ) 
-		~ooo.set(\loopStart, 0.3+(0.1.rand) ) 
-		~ooo.set(\loopEnd, 0.65+(0.1.rand) ) 
+		~ooo.set(\probability, 0.36+(0.1.rand) )
+		~ooo.set(\rate, 1+(0.1.rand) )
+		~ooo.set(\pitch, 0.35+(0.1.rand) )
+		~ooo.set(\loopStart, 0.3+(0.1.rand) )
+		~ooo.set(\loopEnd, 0.65+(0.1.rand) )
 		~drones.killAll
 		//	thisatomnumber goes up to 8 and stand for the book.
 	*/
-		
+
 	sendAtomChannel { |out, bool|
 		atomNetAddr.sendMsg( '/out', thisatomnumber, out, bool); // message, which atom, channel, on or off
 	}
-	
-	
-	setDroneLook {  
+
+
+	setDroneLook {
 		var newouter;
-		
+
 		innersize = (freq.cpsmidi * (hub.middle/90)) - 80;
 		outersize = (freq + ((harmonics-1)*fundamental)).cpsmidi * (hub.middle/90) - 80;
 		resonsize = (freq + ((resonance-1)*fundamental)).cpsmidi * (hub.middle/90) - 80;
 //	\dronelook_deb.postln;
 		// outersize = (fundamental * ((tonic * octaveRatio.pow(octave-1) * ratios[ratio]) + (harmonics-1))).cpsmidi * (hub.middle/90) - 80; // old method - don't delete
 		// resonsize = (fundamental * ((tonic * octaveRatio.pow(octave-1) *  ratios[ratio]) + (resonance-1)) ).cpsmidi * (hub.middle/90) - 80;
-	
+
 		if(type == \sine, { // the sine has no harmonics
 			innersize = innersize - 1;
 			outersize = innersize + 1;
 		});
 		synthParams[\freq] = freq;
 	}
-	
+
 	getDroneLook { // called from DroneMachine for drawing
-		^[innersize, outersize, rotation, length];	
+		^[innersize, outersize, rotation, length];
 	}
-		
+
 	name_ { | argname |
-		name = argname.asSymbol;	
+		name = argname.asSymbol;
 		synthParams[\name] = name;
-	}		
-	
+	}
+
 	strokeColor_ { | argcolor |
 		strokeColor = argcolor;
 	}
@@ -208,13 +210,13 @@ Drone {
 	fillColor_ { | argcolor |
 		fillColor = argcolor;
 	}
-	
+
 	env_ { | envt |  // supporting passing in of both array [0, 1] (attack and release) and just an integer (for both A&R)
 		if(envt.isArray, { env = envt }, {env = [envt, envt]});
 		synthParams[\env] = env;
 		^("Drone : "++ name ++ " -> env set to : " ++ env);
 	}
-	
+
 	env {
 		^env;
 	}
@@ -230,7 +232,7 @@ Drone {
 				this.harmonics_(harm);
 			})
 		};
-		
+
 		recursiveMaxHarm.(this.harmonics, argfreq.max(27.5));
 
 		oldfreq = freq;
@@ -245,11 +247,11 @@ Drone {
 		}, {
 			step = (argfreq.max(27.5) - oldfreq) / (dur/0.05).round;
 			if(autoTaskDict.freq.isNil && (argfreq.max(27.5) != oldfreq), {
-				autoTaskDict.add(\freq -> 
+				autoTaskDict.add(\freq ->
 					Task({((dur/0.05).round).do({
 						{
 							freq = freq + step;
-							this.freq_(freq); // recursive calling but without the dur ! 
+							this.freq_(freq); // recursive calling but without the dur !
 						}.defer;
 						0.05.wait;
 					});
@@ -261,15 +263,15 @@ Drone {
 		});
 		^("Drone : "++ name ++ " -> tonic set to : " ++ tonic);
 	}
-	
+
 	postAuto { // xxx delete this
 		autoTaskDict.postln;
 	}
-	
+
 	relFreq_ { | change=0, dur | // change freq relative to current freq of the drone
 		var newfreq;
 		newfreq = (freq + change).clip(20, 20000);
-		this.freq_( newfreq, dur ); 
+		this.freq_( newfreq, dur );
 	}
 
 	tonic_ { | argtonic, dur | // tonic: can accept 3/2 ratios or 1.5 ->  time-morph method
@@ -280,16 +282,16 @@ Drone {
 		synthParams[\tonic] = argtonic;
 		^("Drone : "++ name ++ " -> tonic set to : " ++ tonic);
 	}
-	
+
 	relTonic_ { | change=0, dur | // change tonic relative to current tonic of the drone
 		var newtonic;
 		newtonic = (tonic + change).clip(1, 20);
 		[\tonic, tonic, \newtonic, newtonic ].postln;
-		this.tonic_( newtonic, dur ); 
+		this.tonic_( newtonic, dur );
 	}
 
 /*
-	cents_ { |argcent=0, dur| 
+	cents_ { |argcent=0, dur|
 		var newfreq;
 
 		tonic = argtonic;
@@ -300,19 +302,19 @@ Drone {
 	*/
 
 	ratio_ { | argratio, dur | // time-morph method - this method basically uses the ratio to set the freq
-		var newfreq; 
+		var newfreq;
 		ratio = argratio.max(1).mod(ratios.size); // wrap at the size of the ratios (interface)
 		newfreq = fundamental * tonic * octaveRatio.pow(octave-1) * ratios[ratio]; // octave added
 		degree = scaledegrees.indexOf((ratio-0.2).nearestInList(scaledegrees)); // if no degree has been passed, I force the degree to be the nearest in scale
 		this.freq_(newfreq, dur);
-		synthParams[\ratio] = argratio;		
+		synthParams[\ratio] = argratio;
 		^("Drone : "++ name ++ " -> ratio set to : " ++ ratio);
 	}
 
 	relRatio_ { | change=0, dur | // change freq relative to current freq of the drone
 		var newratio;
 		newratio = ratio + change;
-		this.ratio_( newratio, dur ); 
+		this.ratio_( newratio, dur );
 	}
 
 	degree_ { | argdegree, dur | // time-morph method - this method basically uses the tonic to set the freq
@@ -326,14 +328,14 @@ Drone {
 			newfreq = (fundamental * tonic* octaveRatio.pow(octave-1) * ratios[ratio]).max(fundamental);
 			this.freq_(newfreq, dur);
 		});
-		synthParams[\degree] = argdegree;		
+		synthParams[\degree] = argdegree;
 		^("Drone : "++ name ++ " -> degree set to : " ++ argdegree);
 	}
 
 	relDegree_ { | change=0, dur | // change freq relative to current freq of the drone
 		var newdegree;
 		newdegree = degree + change;
-		this.degree_( newdegree, dur ); 
+		this.degree_( newdegree, dur );
 	}
 
 	note_ { | note, dur | // time-morph method - this method basically uses the ratio to set the freq
@@ -350,7 +352,7 @@ Drone {
 		newfreq = fundamental * tonic * octaveRatio.pow(octave-1) * ratios[ratio]; // octave added
 		degree = scaledegrees.indexOf((ratio-0.2).nearestInList(scaledegrees)); // if no degree has been passed, I force the degree to be the nearest in scale
 		this.freq_(newfreq, dur);
-		synthParams[\ratio] = ratio;		
+		synthParams[\ratio] = ratio;
 		^("Drone : "++ name ++ " -> ratio set to : " ++ ratio);
 	}
 
@@ -370,7 +372,7 @@ Drone {
 	playScale { | dur=0.25, slide=false |
 		this.playDegrees(dur, slide);
 	}
-	
+
 	octave_ { | argoctave, dur | // tonic: can accept 3/2 ratios or 1.5 ->  time-morph method
 		var newfreq;
 		octave = argoctave.max(1);
@@ -379,18 +381,18 @@ Drone {
 		synthParams[\octave] = argoctave;
 		^("Drone : "++ name ++ " -> octave set to : " ++ octave);
 	}
-	
+
 	relOctave_ { | change=0, dur | // change freq relative to current freq of the drone
 		var newoctave;
 		newoctave = octave + change;
-		this.octave_( newoctave, dur ); 
+		this.octave_( newoctave, dur );
 	}
 
 	transpose_ { | argtuninginterval, dur | // transposition of tuning ratios (recommended if transposing chords)
 		this.ratio_( ratio + argtuninginterval, dur );
 	}
 
-	interval_ { | arginterval, dur | // transposition of scale intervals 
+	interval_ { | arginterval, dur | // transposition of scale intervals
 		degree = degree + arginterval;
 		this.degree_( degree, dur );
 	}
@@ -414,7 +416,7 @@ Drone {
 			step = (argharmonics.max(1) - harmonics) / (dur/0.05).round;
 			[argharmonics, harmonics].postln;
 			if(autoTaskDict.harmonics.isNil && (argharmonics.max(1) != harmonics), {
-				autoTaskDict.add(\harmonics -> 
+				autoTaskDict.add(\harmonics ->
 					Task({((dur/0.05).round).do({
 						{
 							harmonics = harmonics + step;
@@ -430,7 +432,7 @@ Drone {
 		});
 		^("Drone : "++ name ++ " -> harmonics set to : " ++ harmonics);
 	}
-	
+
 	resonance_ { | argres, dur=nil |
 		var step;
 		if(argres.isKindOf(Boolean), { // setting resonance on and off
@@ -450,7 +452,7 @@ Drone {
 			}, {
 				step = (argres - resonance) / (dur/0.05).round;
 				if(autoTaskDict.resonance.isNil && (argres != resonance), {
-					autoTaskDict.add(\resonance -> 
+					autoTaskDict.add(\resonance ->
 						Task({((dur/0.05).round).do({
 							{
 								resonance = resonance + step;
@@ -467,7 +469,7 @@ Drone {
 		});
 		^("Drone : "++ name ++ " -> resonance set to : " ++ resonance);
 	}
-	
+
 	amp_ { | argamp, dur |
 		var step;
 		if(dur.isNil || (dur == 0), {
@@ -477,7 +479,7 @@ Drone {
 		}, {
 			step = (argamp - amp) / (dur/0.05).round;
 			if(autoTaskDict.amp.isNil && (argamp != amp), {
-				autoTaskDict.add(\amp -> 
+				autoTaskDict.add(\amp ->
 					Task({((dur/0.05).round).do({
 						{
 							amp = amp + step;
@@ -493,21 +495,21 @@ Drone {
 		});
 		^("Drone : "++ name ++ " -> amp set to : " ++ argamp);
 	}
-	
+
 	relAmp_ { | change=0, dur=10 | // change amp relative to current amp the drone
-		this.amp_( amp + (amp * change), dur); 
+		this.amp_( amp + (amp * change), dur);
 	}
 
 	speed_ { | argspeed |
 		speed = argspeed.value/1000; // .value since it's possible to pass a function as a speed arg
 		^("Drone : "++ name ++ " -> speed set to : " ++ speed);
 	}
-	
+
 	relSpeed_ { | change=0 | // change speed relative to current speed of the drone (increase/decrease with the input amount)
 		if(speed <= 0, {
 			speed = speed - (change/1000);
 		},{
-			speed = speed + (change/1000);			
+			speed = speed + (change/1000);
 		});
 	}
 
@@ -518,16 +520,16 @@ Drone {
 		this.startSynth();
 		^("Drone : "++ name ++ " -> angle set to : " ++ argangle);
 	}
-	
+
 	rotation_ { | argrotation | // use this rather than angle from GUI
 		//"setting rotation to: ".post; argrotation.postln;
 		rotation = argrotation;
-	}	
-	
+	}
+
 	relRotation_ { | change=0 | // use this rather than angle from GUI
 		rotation = (rotation+change)%(2*pi);
 		oppositemove = true;
-	}	
+	}
 
 	length_ { | arglength |
 		length = (arglength*((2*pi)/360)).max(0.01).min(2pi);
@@ -557,7 +559,7 @@ Drone {
 		var temptuningratios, tuningratios, localfreq;
 		tuning = argtuning;
 		[\NEWTUNING, tuning].postln;
-		
+
 		if(tuning.isArray, {
 			if(tuning[0] == 0, { // the tuning array is in cents (cents start with 0)
 				tuningratios = (tuning/100).midiratio;
@@ -565,10 +567,10 @@ Drone {
 				tuningratios = tuning;
 			});
 			[\TUNING_IS_ARRAY, tuningratios].postln;
-		
+
 		}, {
 			[\TUNING_IS_NOT_ARRAY, tuningratios].postln;
-			temptuningratios = Tuning.newFromKey(argtuning.asSymbol); 
+			temptuningratios = Tuning.newFromKey(argtuning.asSymbol);
 			[\temptuningratios, temptuningratios].postln;
 			if(temptuningratios.isNil, { "IN HERE \n ++ \n".postln;temptuningratios = DroneScale.new(argtuning) }); // support of the Scala scales / tunings
 						[\temptuningratios22, temptuningratios].postln;
@@ -587,7 +589,7 @@ Drone {
 		ratios = ratios.insert(0, 0); // put a zero at the beginning so I can index from 1 (and get at it as well)
 
 		localfreq = fundamental * tonic * octaveRatio.pow(octave-1) * ratios[ratio];
-		this.freq_(localfreq, dur); // freq is set in .freq_ 
+		this.freq_(localfreq, dur); // freq is set in .freq_
 		^("Drone : "++ name ++ " -> tuning set to : " ++ tuning);
 	}
 
@@ -598,7 +600,7 @@ Drone {
 		\deb00.postln;
 		if(scale.isArray, {
 			semitones = scale;
-			
+
 		}, {
 					\deb000.postln;
 
@@ -609,14 +611,14 @@ Drone {
 									\deb222.postln;
 
 				scala = true;
-				scl = DroneScale.new(scale); 
+				scl = DroneScale.new(scale);
 					\deb333.postln;
 				"This is a Scala scale".postln;
 				[\scl, scl].postln;
 				this.tuning_(scale); // the Scala scales are also tunings
 				\deb444.postln;
 
-			}); 
+			});
 			octaveRatio = scl.tuning.octaveRatio; // this is for non-octave repeating scales such as Bohlen Pierce 3:1 'tritave' scale
 			semitones = scl.semitones;
 		});
@@ -638,7 +640,7 @@ Drone {
 	chordnote_ { | index, dur=nil |
 		this.ratio_(chord.wrapAt(index-1)+1, dur); // add 1 as the nil is the first item of scale and tuning (indexing from 1)
 	}
-	
+
 	type_ { | argtype = \saw, dur=0 |
 		type = argtype;
 		this.freeSynths(0);
@@ -659,33 +661,33 @@ Drone {
 		synthParams[\type] = type;
 		^("Drone : "++ name ++ " -> type set to : " ++ type);
 	}
-	
+
 	set { | ...args | // this method is for all commands to the synth that do NOT change the graphic drone on the GUI
 		if(args.indexOf(\amp).isNil.not, { amp = args[args.indexOf(\amp)+1] }); // set the amplitude
 		synthParams.putAll(args);
 		synthgroup.set(*args);
 		^("Drone : "++ name ++ " -> args set to : " ++ args);
 	}
-	
+
 	// used for deathArray in DroneController for slow visual fadeout
 	killSynths { | releasetime=0 |
 		var step;
 		var tempsynthgroup = synthgroup;
-		
+
 		if(releasetime > 0.5, {
 			step = 0.05/releasetime;
-			// fork works, but not Task (when drones are fading out in scores) - DON'T mess with this! !!! 
+			// fork works, but not Task (when drones are fading out in scores) - DON'T mess with this! !!!
 //	 		Task({ ((releasetime/0.05).round).do({ ampMult = ampMult - (step*1.5); "FADING OUT".postln; 0.05.wait; })}).start(TempoClock.new); // slow disappearance of drone colour
 	 		{ ((releasetime/0.05).round).do({ ampMult = ampMult - (step*1.5); 0.05.wait; }); this.killDrone }.fork(TempoClock.new); // slow disappearance of drone colour
 		});
 		synths = synths.collect({arg synth; if(synth.isNil, {666}, {synth}) }); // remove nil from array (else drone might cross line & create a new synth)
 		"killing synths for ___ ".post; this.name.postln;
 		"synths : ".post; synths.postln;
-		
+
 		synthgroup.set(\doneAction, 14); // change doneAction to 14 so the synths will free the group as well
 		if(synths.occurrencesOf(666) == synths.size, { synthgroup.free }); // if there is no synth playing, we still need to free the group
 		synthgroup.release(releasetime); // free the synths in the group (and with doneAction 14, they'll kill the group)
-		
+
 		//synths.do({arg synth; synth.release(releasetime)});
 		//{tempsynthgroup.free}.defer(releasetime+0.5); // remove the group itself from the server
 		//synthgroup = Group.new; // create a new for next synths
@@ -704,7 +706,7 @@ Drone {
 		synths = Array.fill(nrChannels, { nil }); // remove references to synths from synths array
 	}
 
-	// this method is used when a drone is killed, as in ~name.kill 
+	// this method is used when a drone is killed, as in ~name.kill
 	// it then reports to the controller which does some array sorting, and kills the drone (killDrone method below)
 	kill { | releasetime | // from User -> DroneInterpreter // NOTE - don't put 0 as default arg - with nil the synth uses its envelope
 		"Killing drone (Drone Class): ".post; this.name.postln;
@@ -712,18 +714,18 @@ Drone {
 		if(atomcount > -1, { oscresp.remove });
 		hub.drones.killDrone(this.name, releasetime);
 	}
-	
+
 	// this method is private for the DroneController class - not used by user
 	killDrone { | releasetime |
 		// free all tasks, synths and MIDI
 		autoTaskDict.do({ | task | task.stop; "killing autoTask".postln; [\task, task].postln; }); // kill automation
-		this.freeSynths( releasetime );	
+		this.freeSynths( releasetime );
 		this.removeMIDI(); // in case there is a MIDI listener on the drone
 	}
-	
+
 	// ---------------------------------------> automation code  ---------------------------------------------
-	
-	// need to create handlers/methods for all the params OF THE SYNTH DEFS I want to control 
+
+	// need to create handlers/methods for all the params OF THE SYNTH DEFS I want to control
 	// these are setters for what is else this.set above and stored in the synthParams dict
 	// tonic_, harmonics_, etc. are already supported, but synth params that are not exposed as methods have to be exposed
 
@@ -743,7 +745,7 @@ Drone {
 	}
 
 	setParam {| method, min, max, round=0 | // GUI update of parameters - no automation
-		hub.drones.setParam_(this, method, min, max, round); 
+		hub.drones.setParam_(this, method, min, max, round);
 	}
 
 	stopParam { | method |
@@ -755,11 +757,11 @@ Drone {
 	startAuto { | method, movementarray | // method called only from DroneController
 		var tempmethod = method.asSymbol;
 		method = (method++"_").asSymbol;
-		autoTaskDict.add(tempmethod -> 
+		autoTaskDict.add(tempmethod ->
 			Task({
 				inf.do({ |i|
 					{ this.perform(method, movementarray.wrapAt(i)[1]) }.defer;
-					movementarray.wrapAt(i)[0].wait;	
+					movementarray.wrapAt(i)[0].wait;
 				});
 			}).play(TempoClock.new);
 		);
@@ -780,7 +782,7 @@ Drone {
 
 	// MIDI file playback (called from DroneStates)
 	startMIDI { | name, movementarray | // method called only from DroneController (start and stop is there)
-		autoTaskDict.add(name -> 
+		autoTaskDict.add(name ->
 			Task({
 				inf.do({ |i|
 					var cps;
@@ -788,14 +790,14 @@ Drone {
 						cps = movementarray.wrapAt(i)[2].midicps.nearestInList(fundamental*ratios); // for the diverse tunings
 					//	cps = movementarray.wrapAt(i)[2].midicps;
 					//	[\cps___, cps].postln;
-						{ 
+						{
 			//				this.amp_(movementarray.wrapAt(i)[3]);
-							this.freq_( cps ); 
+							this.freq_( cps );
 						}.defer;
 			//		},{
 			//			{ this.amp_(movementarray.wrapAt(i)[3]) }.defer;
 			//		});
-					movementarray.wrapAt(i)[0].wait;	
+					movementarray.wrapAt(i)[0].wait;
 				});
 			}).play(TempoClock.new);
 		);
@@ -813,15 +815,15 @@ Drone {
 			{
 				this.setFreqFromRatioOct_(aratio, dur);
 				this.amp_(args[0]/127, dur);
-			}.defer;		
-		});		
+			}.defer;
+		});
 	}
-	
+
 	removeMIDI {
 		MIDIdef(this.name).free;
 		MIDIdef("control"++this.name).free;
 	}
-	
+
 	exposeMIDI { | synthargs |
 		var change;
 		var offset = {nil} ! 8 ;
@@ -835,7 +837,7 @@ Drone {
 			if(selected, {
 				// num is the parameter (the knob)
 				// val is the value
-				
+
 				if(hub.padDown, { // change value offset (reset knob)
 					offset[num] = val;
 					[\offset, offset[num]].postln;
@@ -846,7 +848,7 @@ Drone {
 							if(val > offset[num], {change = 1},{change = -1});
 							this.freq = this.freq + change;
 							offset[num] = val;
-							
+
 	//						if(synthargs[num].isNil, {
 	//							this.freq = this.freq + (val-offset);
 	//						},{
@@ -858,7 +860,7 @@ Drone {
 							if(val > offset[num], {change = 0.1},{change = -0.1});
 							this.harmonics = this.harmonics + change;
 							offset[num] = val;
-	
+
 							}
 						{3}{ // amp
 							"val is: ".post; val.postln;
@@ -882,30 +884,30 @@ Drone {
 							}
 						{8}{
 							"val is: ".post; val.postln;
-							};	
+							};
 				});
 			});
-		});		
-		
+		});
+
 	}
 
 	addFunc { | name, func, time=1 | // if no time arg passed, then defaults to a sec
-		autoTaskDict.add(name -> 
+		autoTaskDict.add(name ->
 			Task({
-				inf.do({ 
-					{func.value(this)}.defer; 
-					time.max(0.1).wait; 
+				inf.do({
+					{func.value(this)}.defer;
+					time.max(0.1).wait;
 				});
 			}).play(TempoClock.new);
 		);
 	} // addFunc can be paused and restarted with auto_
-	
+
 	removeFunc { | name |
 		this.stopParam(name);
 	}
 
 	interpret { |func|
-		{ func.value(this) }.defer; 
+		{ func.value(this) }.defer;
 	}
 
 //---------------------------------- creating scales (and saving them as Scala files)
@@ -914,13 +916,13 @@ Drone {
 		scaleTonic = freq; // the tonic - the reference point of the scale
 		^("New scale array is ready to be filled with notes")
 	}
-	
+
 	addToScale { | index |
 		var thisratio;
 		thisratio = freq / scaleTonic;
 		ratios = ratios.insert(index, thisratio);
 	}
-		
+
 	saveScale { | name, description="custom ixi scale" |
 		var cents, scalafilestring, scalafile;
 		this.freq_(scaleTonic);
@@ -931,7 +933,7 @@ Drone {
 		if(cents[0] == 0, { cents.removeAt(0)}); // there is no 0 cents in scala files (but octave)
 		scalafilestring = "! "++name++".scl\n!\n"++description++"\n"++cents.size++"\n!\n";
 		cents.do({arg cent;
-			cent = cent.asString; 
+			cent = cent.asString;
 			if(cent.asString.find(".").isNil, { cent = cent ++ ".0" }); // make sure it's a float
 			scalafilestring = scalafilestring ++ cent ++ "\n";
 		});
@@ -940,27 +942,27 @@ Drone {
 		scalafile.close;
 		this.scale_( name );
 	}
-	
+
 	// --------------------------------------------------------------------------------------------------------
-	
+
 	state { // post the state of the drone (not the synth state which is below)
-		
+
 		var string;
-		
+
 		string = "\nname : "++ name ++
-		"\ntype : " ++ type.asString ++ 
-		"\ntonic : "++ tonic.asString ++ 
-		"\nharmonics : " ++ harmonics.asString ++ 
+		"\ntype : " ++ type.asString ++
+		"\ntonic : "++ tonic.asString ++
+		"\nharmonics : " ++ harmonics.asString ++
 		"\nfundamental : " ++ fundamental.asString ++
 		"\nfreq : " ++ freq.asString ++
 		"\namp : " ++ amp.asString ++
-		"\ntuning : " ++ tuning.asString ++ 
+		"\ntuning : " ++ tuning.asString ++
 		"\nratio : " ++ ratio.asString ++
-		"\nscale : " ++ scale.asString ++ 
+		"\nscale : " ++ scale.asString ++
 		"\ndegree : " ++ degree.asString ++
 		"\nsynths : " ++ synths.asString ++
 		"\n";
-		
+
 		if(hub.post, {
 			hub.interpreter.postview.string_(string);
 		});
@@ -982,68 +984,68 @@ Drone {
 		"~"++name++".octave = "++octave++"\n";
 		^string;
 	}
-	
+
 	methods { // post what methods the drone takes
-		
+
 		^"\ntonic_ : setting the tonic from the fundamental" ++
-		"\nharmonics_ : set the number of harmonics" ++ 
-		"\nfreq_ : set the frequency of a drone (same as tonic, but different interface)" ++ 
-		"\nratio_ : set ratio in the chosen tuning" ++ 
-		"\namp_ : set the amplitude" ++ 
-		"\nrelAmp_ : set the relative amplitude" ++ 
-		"\nspeed_ : set the speed (0 to 100)" ++ 
-		"\nangle_ : set the angle (0 to 360 - starting on right)" ++ 
-		"\nlength_ : set the length of the drone (0 to 360)" ++ 
-		"\nselected_ : set selection to true or false" ++ 
-		"\ntuning_ : set tuning (better done on a drones level)" ++ 
-		"\nratio_ : set the tuning ratio (the semitone) indexing from 1" ++ 
-		"\nscale_ : set the scale (better done on a drones level)" ++ 
-		"\ndegree_ : set the scale degree (the note in the scale) indexing from 1" ++ 
-		"\ntype_ : set the synth type (saw, sine, tri, cub, pulse, formant)" 
+		"\nharmonics_ : set the number of harmonics" ++
+		"\nfreq_ : set the frequency of a drone (same as tonic, but different interface)" ++
+		"\nratio_ : set ratio in the chosen tuning" ++
+		"\namp_ : set the amplitude" ++
+		"\nrelAmp_ : set the relative amplitude" ++
+		"\nspeed_ : set the speed (0 to 100)" ++
+		"\nangle_ : set the angle (0 to 360 - starting on right)" ++
+		"\nlength_ : set the length of the drone (0 to 360)" ++
+		"\nselected_ : set selection to true or false" ++
+		"\ntuning_ : set tuning (better done on a drones level)" ++
+		"\nratio_ : set the tuning ratio (the semitone) indexing from 1" ++
+		"\nscale_ : set the scale (better done on a drones level)" ++
+		"\ndegree_ : set the scale degree (the note in the scale) indexing from 1" ++
+		"\ntype_ : set the synth type (saw, sine, tri, cub, pulse, formant)"
 	}
 
-	synth { // get the state of the synth 
-		
+	synth { // get the state of the synth
+
 		^switch(type)
-			{ \saw     }{ 
+			{ \saw     }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
 			}
-			{ \sine    }{ 
+			{ \sine    }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
 			 }
-			{ \tri     }{ 
+			{ \tri     }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
@@ -1051,122 +1053,152 @@ Drone {
 				"\n");
 
 			}
-			{ \cub     }{ 
+			{ \cub     }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
+
 			}
 			{ \pulse   }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
+
 			}
 			{ \eliane   }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
-			}			
+
+			}
 			{ \noise   }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
-			}		
+
+			}
 			{ \klank   }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
-			}		
+
+			}
 			{ \gendy   }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
-			}		
+
+			}
 			{ \formant }{
 				("\nfreq : "++ synthParams[\freq].asString ++
-				"\nharmonics : " ++ synthParams[\harmonics].asString ++ 
-				"\nformfreq : " ++ synthParams[\formfreq].asString ++ 
-				"\nbwfreq : " ++ synthParams[\bwfreq].asString ++ 
-				"\namp : "++ synthParams[\amp].asString ++ 
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\nformfreq : " ++ synthParams[\formfreq].asString ++
+				"\nbwfreq : " ++ synthParams[\bwfreq].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
 				"\nresonance : " ++ synthParams[\resonance].asString ++
-				"\noscfreq : " ++ synthParams[\oscfreq].asString ++ 
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
 				"\noscamp : " ++ synthParams[\oscamp].asString ++
 				"\nenv : " ++ synthParams[\env].asString ++
-				"\ndep : " ++ synthParams[\dep].asString ++ 
+				"\ndep : " ++ synthParams[\dep].asString ++
 				"\narr : " ++ synthParams[\arr].asString ++
 				"\ntime : " ++ synthParams[\time].asString ++
 				"\nfgate : " ++ synthParams[\fgate].asString ++
 				"\ndetune : " ++ synthParams[\detune].asString ++
 				"\n");
-				
+		}
+		{ \pad     }{
+				("\nfreq : "++ synthParams[\freq].asString ++
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
+				"\noscamp : " ++ synthParams[\oscamp].asString ++
+				"\nresonance : " ++ synthParams[\resonance].asString ++
+				"\nenv : " ++ synthParams[\env].asString ++
+				"\ndep : " ++ synthParams[\dep].asString ++
+				"\narr : " ++ synthParams[\arr].asString ++
+				"\ntime : " ++ synthParams[\time].asString ++
+				"\nfgate : " ++ synthParams[\fgate].asString ++
+				"\ndetune : " ++ synthParams[\detune].asString ++
+				"\n");
+			/*}
+		{ \padw     }{
+				("\nfreq : "++ synthParams[\freq].asString ++
+				"\nharmonics : " ++ synthParams[\harmonics].asString ++
+				"\namp : "++ synthParams[\amp].asString ++
+				"\noscfreq : " ++ synthParams[\oscfreq].asString ++
+				"\noscamp : " ++ synthParams[\oscamp].asString ++
+				"\nresonance : " ++ synthParams[\resonance].asString ++
+				"\nenv : " ++ synthParams[\env].asString ++
+				"\ndep : " ++ synthParams[\dep].asString ++
+				"\narr : " ++ synthParams[\arr].asString ++
+				"\ntime : " ++ synthParams[\time].asString ++
+				"\nfgate : " ++ synthParams[\fgate].asString ++
+				"\ndetune : " ++ synthParams[\detune].asString ++
+				"\n");
+*/
 			};
-	}
-	
+	} // \padw is a tryout don't use it.
+
 	// ---  below is all synth creation and drawing
 
 	update {
@@ -1178,54 +1210,54 @@ Drone {
 
 	draw {
 	     ^{
-			if(selected, { 
+			if(selected, {
 				Pen.width = 1.5;
-				strokeColor.alpha_(amp+0.5).set; 
+				strokeColor.alpha_(amp+0.5).set;
 			},{
 				Pen.width = 1;
 		     	strokeColor.alpha_(amp+0.1).set;
 			});
 			if(dying, {Pen.width = 1; Color.red(0.5).alpha_(amp+0.5).set });
 			Pen.addAnnularWedge(
-				point+0.5, 
-				innersize, 
-				outersize, 	
-				rotation, 
+				point+0.5,
+				innersize,
+				outersize,
+				rotation,
 				length
 			);
 			Pen.perform(\stroke);
-	
+
 	/// TESTING RESONANCE REPRESENTATION
 			if(showResonance, { // if the resonance strip is visible/audible
 				Pen.addAnnularWedge(
-					point+0.5, 
-					resonsize, 
-					resonsize+4, 	
-					rotation, 
+					point+0.5,
+					resonsize,
+					resonsize+4,
+					rotation,
 					length
 				);
 				Pen.perform(\stroke);
-				
+
 				fillColor.alpha_(amp).set;
 				Pen.addAnnularWedge(
-					point+0.5, 
-					resonsize, 
-					resonsize+4, 	
-					rotation, 
+					point+0.5,
+					resonsize,
+					resonsize+4,
+					rotation,
 					length
 				);
 				Pen.perform(\fill);
 			});
 	/////////////////////////////////////
-	
+
 			Pen.width = 1;
 			//alpha = amp / 2;
 			fillColor.alpha_((ampMult*amp)+Env.new([0,0.2,0.1,0], [0.1,0.1, 0.6],[-3,0,3]).at(amp)).set;
 			Pen.addAnnularWedge(
-				point+0.5, 
-				innersize, 
-				outersize, 	
-				rotation, 
+				point+0.5,
+				innersize,
+				outersize,
+				rotation,
 				length
 			);
 			Pen.perform(\fill);
@@ -1235,16 +1267,16 @@ Drone {
 	initSynthParams { |argtonic, argfreq, argharmonics, argamp, argdegree, argoctave, argenv|
 			// TODO: the different synths might have different args
 			^switch(type)
-			{\saw}{ 
+			{\saw}{
 				(type:\saw, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			}
-			{\sine}{ 
+			{\sine}{
 				(type:\sine, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			 }
-			{\tri}{ 
+			{\tri}{
 				(type:\tri, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			}
-			{\cub}{ 
+			{\cub}{
 				(type:\cub, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			}
 			{\pulse}{
@@ -1265,13 +1297,16 @@ Drone {
 			{\gendy}{
 				(type:\gendy, detune:0, tonic:argtonic, freq:argfreq, formfreq:3, bwfreq:2, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			}
-			
+
 			{\atom}{
 				(type:\formant, detune:0, tonic:argtonic, freq:argfreq, formfreq:3, bwfreq:2, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			}
 			{\pad}{
 				(type:\pad, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
-			} { // everything else
+			} /*
+		    {\padw}{
+				(type:\padw, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
+			}*/{ // everything else
 				(type:type, detune:0, tonic:argtonic, freq:argfreq, harmonics:argharmonics, amp:argamp, oscfreq:0.1, oscamp:0, gate:1, env:argenv, dep:1, arr:2, time:10, fgate:0, resamp:0, resonance:1, degree:argdegree, octave:argoctave);
 			};
 	}
@@ -1283,46 +1318,49 @@ Drone {
 			{\saw}{ // add detune here.
 				Synth(\dronesaw, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\sine}{ 
-				Synth(\dronesine, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance], 
+			{\sine}{
+				Synth(\dronesine, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\tri}{ 
-				Synth(\dronetri, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance], 
+			{\tri}{
+				Synth(\dronetri, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\cub}{ 
-				Synth(\dronecub, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance], 
+			{\cub}{
+				Synth(\dronecub, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\pulse}{ 
-				Synth(\dronepulse, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance], 
+			{\pulse}{
+				Synth(\dronepulse, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\atom}{ 
+			{\atom}{
 				// here send an OSC message with the new out:
 				this.sendAtomChannel(out, 1); // in DroneAtom file
 				}
-			{\formant}{ 
-				Synth(\droneformant, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance], 
-				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], 
+			{\formant}{
+				Synth(\droneformant, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance],
+				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr],
 				\time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\eliane}{ 
-				Synth(\eliane, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance], 
-				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], 
+			{\eliane}{
+				Synth(\eliane, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance],
+				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr],
 				\time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\noise}{ 
-				Synth(\dronenoise, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance], 
-				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], 
+			{\noise}{
+				Synth(\dronenoise, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance],
+				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr],
 				\time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\klank}{ 
-				Synth(\droneklank, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance], 
-				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], 
+			{\klank}{
+				Synth(\droneklank, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance],
+				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr],
 				\time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\gendy}{ 
-				Synth(\dronegendy, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance], 
-				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], 
+			{\gendy}{
+				Synth(\dronegendy, [\out, out, \freq, freq, \formfreq, sp[\formfreq], \bwfreq, sp[\bwfreq], \harmonics, harmonics, \resonance, sp[\resonance],
+				\amp, amp, \oscfreq, sp[\oscfreq], \oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr],
 				\time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
 
-			{\pad}{ 
+			{\pad}{
 				Synth(\dronepad, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
+		    /*{\padw}{
+				Synth(\dronepadw, [\out, out, \freq, freq, \harmonics, harmonics, \amp, amp, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
+				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }*/
 			{ var nearestFreq, midinote; // else, it's a sample
 				var noteData, startLoop, endLoop;
 				noteData = DroneSynths.noteData(type, freq);
@@ -1332,10 +1370,10 @@ Drone {
 				//[\startLoop_____________, startLoop, \endLoop, endLoop].postln;
 				Synth(\droneinstr, [\buffer, buffer, \out, out, \freq, freq, \midinote, midinote, \harmonics, harmonics*2, \amp, amp*2, \startLoop, startLoop,
 				\endLoop, endLoop, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
-				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) 
+				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup)
 			};
 				/*
-			{\piano}{ 
+			{\piano}{
 				var nearestFreq, midinote;
 				var noteData, startLoop, endLoop;
 				//nearestFreq = DroneSynths.nearestFreq(\piano, freq);
@@ -1355,7 +1393,7 @@ Drone {
 				Synth(\instr, [\out, out, \buffer, buffer, \freq, freq, \midinote, midinote, \harmonics, harmonics*2, \amp, amp, \startLoop, startLoop,
 				\endLoop, endLoop, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\organ}{ 
+			{\organ}{
 				var nearestFreq, midinote;
 				var noteData, startLoop, endLoop;
 				//nearestFreq = DroneSynths.nearestFreq(\piano, freq);
@@ -1375,7 +1413,7 @@ Drone {
 				Synth(\instr, [\out, out, \buffer, buffer, \freq, freq, \midinote, midinote, \harmonics, harmonics*2, \amp, amp, \startLoop, startLoop,
 				\endLoop, endLoop, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\organdist}{ 
+			{\organdist}{
 				var nearestFreq, midinote;
 				var noteData, startLoop, endLoop;
 				//nearestFreq = DroneSynths.nearestFreq(\piano, freq);
@@ -1395,7 +1433,7 @@ Drone {
 				Synth(\instr, [\out, out, \buffer, buffer, \freq, freq, \midinote, midinote, \harmonics, harmonics*2, \amp, amp, \startLoop, startLoop,
 				\endLoop, endLoop, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) }
-			{\organharm}{ 
+			{\organharm}{
 				var nearestFreq, midinote;
 				var noteData, startLoop, endLoop;
 				//nearestFreq = DroneSynths.nearestFreq(\piano, freq);
@@ -1415,12 +1453,12 @@ Drone {
 				Synth(\instr, [\out, out, \buffer, buffer, \freq, freq, \midinote, midinote, \harmonics, harmonics*2, \amp, amp, \startLoop, startLoop,
 				\endLoop, endLoop, \oscfreq, sp[\oscfreq], \resonance, sp[\resonance],
 				\oscamp, sp[\oscamp], \env, sp[\env], \dep, sp[\dep], \arr, sp[\arr], \time, sp[\time], \fgate, sp[\fgate], \detune, sp[\detune]], synthgroup) };
-			*/			
+			*/
 	}
-		
-	startSynth { 
+
+	startSynth {
 	//	synthgroup = Group.new; // create a new for next synths
-		if(speed>0, { 
+		if(speed>0, {
 			length.raddeg.round(1).do({ |i| // a virtual rotation around the circle, to initialise the synths
 				var rot;
 				rot = (rotation + i.degrad - length) % (2*pi);
@@ -1431,16 +1469,16 @@ Drone {
 				var rot;
 				rot = ((rotation + length) - i.degrad ) % (2*pi);
 				this.synthMachine(rot);
-			});			
+			});
 		});
 	}
 
 	getSynths { // used for debugging
-		^synths;	
+		^synths;
 	}
-	
+
 	synthMachine { |rotation| // rotation set as an argument as this method is used to create the synth in method below
-		// slightly complex method, but prly necessary for the complex interactions involved 
+		// slightly complex method, but prly necessary for the complex interactions involved
 		switch(nrChannels)
 		{1} {
 			if(length> 350.degrad, { // if the circle is nearly full
@@ -1451,50 +1489,50 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						});
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						});	
-					}); 
+						});
+					});
 				}, { // if speed is < 0 and backmove not
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						});
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
 						});
-					});				
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						});
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						});	
-					});				
+						});
+					});
 				}, { // if speed is < 0 and backmove not
 					if( ((((rotation+length)%(2*pi))) > 270.degrad) && (((rotation+length)%(2*pi)) < 275.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						});
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						});	
-					}); 
+						});
+					});
 				});
 			});
 		}
@@ -1509,54 +1547,54 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 180.degrad) && (((rotation+length)%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1564,54 +1602,54 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 359.0.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 359.9.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 0.degrad) && (((rotation+length)%(2*pi)) < 5.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 			});
 		}
@@ -1628,50 +1666,50 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 180.degrad) && (((rotation+length)%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1679,50 +1717,50 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 270.degrad) && (((rotation+length)%(2*pi)) < 275.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1730,50 +1768,50 @@ Drone {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 359.0.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 359.9.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 0.degrad) && (((rotation+length)%(2*pi)) < 5.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1781,50 +1819,50 @@ Drone {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 90.degrad) && ((rotation%(2*pi)) < 95.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 90.degrad) && ((rotation%(2*pi)) > 85.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 90.degrad) && (((rotation+length)%(2*pi)) > 85.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 90.degrad) && ((rotation%(2*pi)) > 85.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 90.degrad) && (((rotation+length)%(2*pi)) > 85.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 90.degrad) && (((rotation+length)%(2*pi)) < 95.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 90.degrad) && ((rotation%(2*pi)) < 95.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 			});
 		}
@@ -1841,50 +1879,50 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 225.degrad) && ((rotation%(2*pi)) < 230.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 225.degrad) && ((rotation%(2*pi)) > 220.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 225.degrad) && (((rotation+length)%(2*pi)) > 220.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 225.degrad) && ((rotation%(2*pi)) > 220.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 225.degrad) && (((rotation+length)%(2*pi)) > 220.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 225.degrad) && (((rotation+length)%(2*pi)) < 230.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 225.degrad) && ((rotation%(2*pi)) < 230.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1892,50 +1930,50 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 315.degrad) && ((rotation%(2*pi)) < 320.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 315.degrad) && ((rotation%(2*pi)) > 310.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 315.degrad) && (((rotation+length)%(2*pi)) > 310.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 315.degrad) && ((rotation%(2*pi)) > 310.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 315.degrad) && (((rotation+length)%(2*pi)) > 310.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 315.degrad) && (((rotation+length)%(2*pi)) < 320.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 315.degrad) && ((rotation%(2*pi)) < 320.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1943,50 +1981,50 @@ Drone {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 45.degrad) && ((rotation%(2*pi)) < 50.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 45.degrad) && ((rotation%(2*pi)) > 40.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 45.degrad) && (((rotation+length)%(2*pi)) > 40.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 45.degrad) && ((rotation%(2*pi)) > 40.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 45.degrad) && (((rotation+length)%(2*pi)) > 40.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 45.degrad) && (((rotation+length)%(2*pi)) < 50.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 45.degrad) && ((rotation%(2*pi)) < 50.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -1994,53 +2032,53 @@ Drone {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 135.degrad) && ((rotation%(2*pi)) < 140.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 135.degrad) && ((rotation%(2*pi)) > 130.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 135.degrad) && (((rotation+length)%(2*pi)) > 130.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 135.degrad) && ((rotation%(2*pi)) > 130.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 135.degrad) && (((rotation+length)%(2*pi)) > 130.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 135.degrad) && (((rotation+length)%(2*pi)) < 140.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 135.degrad) && ((rotation%(2*pi)) < 140.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
+						})
 					})
 				})
 			})
-		}		
+		}
 		{5} {
 
 			if(length> 350.degrad, { // if the circle is nearly full
@@ -2056,50 +2094,50 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 160.degrad) && ((rotation%(2*pi)) < 165.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 160.degrad) && ((rotation%(2*pi)) > 155.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 160.degrad) && (((rotation+length)%(2*pi)) > 155.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 160.degrad) && ((rotation%(2*pi)) > 155.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 160.degrad) && (((rotation+length)%(2*pi)) > 155.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 160.degrad) && (((rotation+length)%(2*pi)) < 165.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 160.degrad) && ((rotation%(2*pi)) < 165.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2107,50 +2145,50 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 240.degrad) && ((rotation%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 240.degrad) && ((rotation%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 240.degrad) && (((rotation+length)%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 240.degrad) && ((rotation%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 240.degrad) && (((rotation+length)%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 240.degrad) && (((rotation+length)%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 240.degrad) && ((rotation%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// mid speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2158,50 +2196,50 @@ Drone {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 270.degrad) && (((rotation+length)%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2209,50 +2247,50 @@ Drone {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 300.degrad) && ((rotation%(2*pi)) < 305.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 300.degrad) && ((rotation%(2*pi)) > 295.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 300.degrad) && (((rotation+length)%(2*pi)) > 295.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 300.degrad) && ((rotation%(2*pi)) > 295.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 300.degrad) && (((rotation+length)%(2*pi)) > 295.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 300.degrad) && (((rotation+length)%(2*pi)) < 305.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 300.degrad) && ((rotation%(2*pi)) < 305.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2260,50 +2298,50 @@ Drone {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 20.degrad) && ((rotation%(2*pi)) < 25.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 20.degrad) && ((rotation%(2*pi)) > 15.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 20.degrad) && (((rotation+length)%(2*pi)) > 15.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 20.degrad) && ((rotation%(2*pi)) > 15.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 20.degrad) && (((rotation+length)%(2*pi)) > 15.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 20.degrad) && (((rotation+length)%(2*pi)) < 25.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 20.degrad) && ((rotation%(2*pi)) < 25.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 			});
 		}
@@ -2322,50 +2360,50 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 180.degrad) && (((rotation+length)%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top-left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2373,50 +2411,50 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 240.degrad) && ((rotation%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 240.degrad) && ((rotation%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 240.degrad) && (((rotation+length)%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 240.degrad) && ((rotation%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 240.degrad) && (((rotation+length)%(2*pi)) > 235.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 240.degrad) && (((rotation+length)%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 240.degrad) && ((rotation%(2*pi)) < 245.degrad), {
 						if(synths[1].isNil.not, {
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2424,50 +2462,50 @@ Drone {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 300.degrad) && ((rotation%(2*pi)) < 305.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 300.degrad) && ((rotation%(2*pi)) > 295.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 300.degrad) && (((rotation+length)%(2*pi)) > 295.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 300.degrad) && ((rotation%(2*pi)) > 295.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 300.degrad) && (((rotation+length)%(2*pi)) > 295.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 300.degrad) && (((rotation+length)%(2*pi)) < 305.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 300.degrad) && ((rotation%(2*pi)) < 305.degrad), {
 						if(synths[2].isNil.not, {
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2475,50 +2513,50 @@ Drone {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 359.0.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 359.9.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 0.degrad) && (((rotation+length)%(2*pi)) < 5.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[3].isNil.not, {
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2526,50 +2564,50 @@ Drone {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 60.degrad) && ((rotation%(2*pi)) < 65.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 60.degrad) && ((rotation%(2*pi)) > 55.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 60.degrad) && (((rotation+length)%(2*pi)) > 55.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 60.degrad) && ((rotation%(2*pi)) > 55.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 60.degrad) && (((rotation+length)%(2*pi)) > 55.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 60.degrad) && (((rotation+length)%(2*pi)) < 65.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 60.degrad) && ((rotation%(2*pi)) < 65.degrad), {
 						if(synths[4].isNil.not, {
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2577,49 +2615,49 @@ Drone {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 120.degrad) && ((rotation%(2*pi)) < 125.degrad), {
 						if(synths[5].isNil.not, {
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 120.degrad) && ((rotation%(2*pi)) > 115.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 120.degrad) && (((rotation+length)%(2*pi)) > 115.degrad), {
 						if(synths[5].isNil.not, {
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 120.degrad) && ((rotation%(2*pi)) > 115.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 120.degrad) && (((rotation+length)%(2*pi)) > 115.degrad), {
 						if(synths[5].isNil.not, {
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 120.degrad) && (((rotation+length)%(2*pi)) < 125.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 120.degrad) && ((rotation%(2*pi)) < 125.degrad), {
 						if(synths[5].isNil.not, {
 							synths[5].release;
 							synths[5] = nil;
-						})	
+						})
 					})
 				})
 			})
@@ -2641,54 +2679,54 @@ Drone {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 180.degrad) && ((rotation%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 180.degrad) && (((rotation+length)%(2*pi)) > 175.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 180.degrad) && (((rotation+length)%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil, {
 							synths[0] = this.createSynth(0);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 180.degrad) && ((rotation%(2*pi)) < 185.degrad), {
 						if(synths[0].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(0, 0)});
 							synths[0].release;
 							synths[0] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top-left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2696,54 +2734,54 @@ Drone {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 225.degrad) && ((rotation%(2*pi)) < 230.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 225.degrad) && ((rotation%(2*pi)) > 220.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 225.degrad) && (((rotation+length)%(2*pi)) > 220.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 225.degrad) && ((rotation%(2*pi)) > 220.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 225.degrad) && (((rotation+length)%(2*pi)) > 220.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 225.degrad) && (((rotation+length)%(2*pi)) < 230.degrad), {
 						if(synths[1].isNil, {
 							synths[1] = this.createSynth(1);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 225.degrad) && ((rotation%(2*pi)) < 230.degrad), {
 						if(synths[1].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(1, 0)});
 							synths[1].release;
 							synths[1] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2751,54 +2789,54 @@ Drone {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(2, 0)});
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(2, 0)});
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 270.degrad) && ((rotation%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 270.degrad) && (((rotation+length)%(2*pi)) > 265.degrad), {
 						if(synths[2].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(2, 0)});
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 270.degrad) && (((rotation+length)%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil, {
 							synths[2] = this.createSynth(2);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 270.degrad) && ((rotation%(2*pi)) < 275.degrad), {
 						if(synths[2].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(2, 0)});
 							synths[2].release;
 							synths[2] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// top-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2806,54 +2844,54 @@ Drone {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 315.degrad) && ((rotation%(2*pi)) < 320.degrad), {
 						if(synths[3].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(3, 0)});
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 315.degrad) && ((rotation%(2*pi)) > 310.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 315.degrad) && (((rotation+length)%(2*pi)) > 310.degrad), {
 						if(synths[3].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(3, 0)});
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 315.degrad) && ((rotation%(2*pi)) > 310.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 315.degrad) && (((rotation+length)%(2*pi)) > 310.degrad), {
 						if(synths[3].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(3, 0)});
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 315.degrad) && (((rotation+length)%(2*pi)) < 320.degrad), {
 						if(synths[3].isNil, {
 							synths[3] = this.createSynth(3);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 315.degrad) && ((rotation%(2*pi)) < 320.degrad), {
 						if(synths[3].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(3, 0)});
 							synths[3].release;
 							synths[3] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2861,54 +2899,54 @@ Drone {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[4].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(4, 0)});
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 359.0.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[4].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(4, 0)});
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating clockwise
 					if( (((rotation%(2*pi))) < 359.9.degrad) && ((rotation%(2*pi)) > 355.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 359.9.degrad) && (((rotation+length)%(2*pi)) > 355.degrad), {
 						if(synths[4].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(4, 0)});
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 0.degrad) && (((rotation+length)%(2*pi)) < 5.degrad), {
 						if(synths[4].isNil, {
 							synths[4] = this.createSynth(4);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 0.degrad) && ((rotation%(2*pi)) < 5.degrad), {
 						if(synths[4].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(4, 0)});
 							synths[4].release;
 							synths[4] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-right speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2916,54 +2954,54 @@ Drone {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 45.degrad) && ((rotation%(2*pi)) < 50.degrad), {
 						if(synths[5].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(5, 0)});
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 45.degrad) && ((rotation%(2*pi)) > 40.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 45.degrad) && (((rotation+length)%(2*pi)) > 40.degrad), {
 						if(synths[5].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(5, 0)});
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 45.degrad) && ((rotation%(2*pi)) > 40.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 45.degrad) && (((rotation+length)%(2*pi)) > 40.degrad), {
 						if(synths[5].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(5, 0)});
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 45.degrad) && (((rotation+length)%(2*pi)) < 50.degrad), {
 						if(synths[5].isNil, {
 							synths[5] = this.createSynth(5);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 45.degrad) && ((rotation%(2*pi)) < 50.degrad), {
 						if(synths[5].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(5, 0)});
 							synths[5].release;
 							synths[5] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -2971,54 +3009,54 @@ Drone {
 						if(synths[6].isNil, {
 							synths[6] = this.createSynth(6);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 90.degrad) && ((rotation%(2*pi)) < 95.degrad), {
 						if(synths[6].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(6, 0)});
 							synths[6].release;
 							synths[6] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 90.degrad) && ((rotation%(2*pi)) > 85.degrad), {
 						if(synths[6].isNil, {
 							synths[6] = this.createSynth(6);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 90.degrad) && (((rotation+length)%(2*pi)) > 85.degrad), {
 						if(synths[6].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(6, 0)});
 							synths[6].release;
 							synths[6] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 90.degrad) && ((rotation%(2*pi)) > 85.degrad), {
 						if(synths[6].isNil, {
 							synths[6] = this.createSynth(6);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 90.degrad) && (((rotation+length)%(2*pi)) > 85.degrad), {
 						if(synths[6].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(6, 0)});
 							synths[6].release;
 							synths[6] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 90.degrad) && (((rotation+length)%(2*pi)) < 95.degrad), {
 						if(synths[6].isNil, {
 							synths[6] = this.createSynth(6);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 90.degrad) && ((rotation%(2*pi)) < 95.degrad), {
 						if(synths[6].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(6, 0)});
 							synths[6].release;
 							synths[6] = nil;
-						})	
-					}); 
+						})
+					});
 				});
 				// bottom-left speaker
 				if((speed>0) && (oppositemove.not), { // if rotating clockwise
@@ -3026,53 +3064,53 @@ Drone {
 						if(synths[7].isNil, {
 							synths[7] = this.createSynth(7);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 135.degrad) && ((rotation%(2*pi)) < 140.degrad), {
 						if(synths[7].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(7, 0)});
 							synths[7].release;
 							synths[7] = nil;
-						})	
-					}); 
+						})
+					});
 				}, {
 					if( (((rotation%(2*pi))) < 135.degrad) && ((rotation%(2*pi)) > 130.degrad), {
 						if(synths[7].isNil, {
 							synths[7] = this.createSynth(7);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 135.degrad) && (((rotation+length)%(2*pi)) > 130.degrad), {
 						if(synths[7].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(7, 0)});
 							synths[7].release;
 							synths[7] = nil;
-						})	
-					});				
+						})
+					});
 				});
 				if((speed<0) && (oppositemove.not), { // if rotating anti clockwise
 					if( (((rotation%(2*pi))) < 135.degrad) && ((rotation%(2*pi)) > 130.degrad), {
 						if(synths[7].isNil, {
 							synths[7] = this.createSynth(7);
 						})
-					}); 				
+					});
 					if( ((((rotation+length)%(2*pi))) < 135.degrad) && (((rotation+length)%(2*pi)) > 130.degrad), {
 						if(synths[7].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(7, 0)});
 							synths[7].release;
 							synths[7] = nil;
-						})	
-					});				
+						})
+					});
 				}, {
 					if( ((((rotation+length)%(2*pi))) > 135.degrad) && (((rotation+length)%(2*pi)) < 140.degrad), {
 						if(synths[7].isNil, {
 							synths[7] = this.createSynth(7);
 						})
-					});				
+					});
 					if( (((rotation%(2*pi))) > 135.degrad) && ((rotation%(2*pi)) < 140.degrad), {
 						if(synths[7].isNil.not, {
 							if(atomcount > -1, {this.sendAtomChannel(7, 0)});
 							synths[7].release;
 							synths[7] = nil;
-						})	
+						})
 					})
 				})
 			})

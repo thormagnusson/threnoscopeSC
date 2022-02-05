@@ -13,15 +13,15 @@ DroneSynths {
 
 	classvar <sampleDict;
 	classvar hub;
-	
+
 	*new { arg loadsamples, hub;
 		^super.new.initDroneSynths(loadsamples, hub);
 	}
 
 	initDroneSynths {arg loadsamples, arghub;
-		
+
 		hub = arghub;
-		
+
 		this.initSampleDict;
 
 		SynthDef(\channelrouter8_2, {arg in=0, out=6;
@@ -65,9 +65,9 @@ DroneSynths {
 
 
 
-		SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43100, endLoop=161200, t_trig=1, attack=1, ratex=1, 
+		SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43100, endLoop=161200, t_trig=1, attack=1, ratex=1,
 			dir= 1, amp=0.42, env=#[3,3], harmonics=4, resonance=1, resamp=0, doneAction=2;
-		
+
 			var signal, delay, tr, att, envl, onsetenvtime;
 			// rate supports microtunings -> midinote is the reference pitch of the sample
 		//	var rate = Lag.kr((freq.cpsmidi - midinote ).midiratio, 0.5);
@@ -76,20 +76,20 @@ DroneSynths {
 			var looplength = ((endLoop-startLoop)/SampleRate.ir)/rate;
 			var trianglelength = looplength; // in case I want to shorten the triangle (e.g., looplength/2)
 			var changetr =  ( Changed.kr(freq)-1).abs; // drops down to zero if there is a change
-		
+
 		//		rate.poll;
-		
+
 			// sample playback mechanism
 			att = PlayBuf.ar(1, buffer, rate, 1, loop:0)*EnvGen.ar(Env.perc(0.0000001, 2, 1, -4))*attack; // attack
 			//tr = TDelay.kr(Impulse.kr(looplength.reciprocal), looplength-(trianglelength/2)).poll;
 			tr = TDelay.kr(TDuty.kr(looplength, (changetr-1).abs), looplength-(trianglelength/2));
-		
-		
+
+
 			signal = LoopBuf.ar(1, buffer, rate, changetr, startLoop, startLoop, endLoop, 2);
 			//delay = LoopBuf.ar(1, buffer, rate, changetr, 0, startLoop+22000, endLoop+22000, 2);
 			delay = DelayN.ar(LoopBuf.ar(1, buffer, rate*dir, changetr, startLoop, startLoop, endLoop, 2), trianglelength/2, trianglelength/2);
 			signal = XFade2.ar(delay, signal+att, (EnvGen.ar((Env.triangle(trianglelength, -2)), tr+(changetr-1)) +1), Lag.kr(amp, 3));
-		
+
 			// threnoscope system
 			signal = LPF.ar(signal, freq * harmonics);
 			signal = BPeakEQ.ar(signal, freq*Lag.kr(resonance, 1), 1, Lag.kr(resamp, 1));
@@ -97,7 +97,7 @@ DroneSynths {
 			signal = signal * envl * AmpComp.kr(freq, 55);
 			Out.ar(out, signal);
 		}).add;
-		
+
 		SynthDef(\droneLimiter, {
 			var input = In.ar(0, 2);
 		//	input = Select.ar(CheckBadValues.ar(input, 0, 0), [input, DC.ar(0), DC.ar(0), input]);
@@ -156,8 +156,8 @@ DroneSynths {
 			// DetectSilence.ar(signal, 0.001, doneAction:2); // security so synths don't pile up
 			Out.ar(out, signal);
 		}, [0, 0.4]).add;
-		
-		
+
+
 		SynthDef(\dronenoise, {arg freq=110, harmonics=2, oscfreq=0.1, oscamp=0, out=0, amp=0.42, gate=1,
 			env=#[3,3], dep=1, arr=2, time=10, fgate=0, detune=0, resonance=1, resamp=0, doneAction=2;
 
@@ -193,18 +193,18 @@ DroneSynths {
 
 		//	signal = LPF.ar(Saw.ar(freqmodosc * freqmodline * freq, amp), freq * harmonics);
 
-			signal = LPF.ar( 
+			signal = LPF.ar(
 			 	DynKlank.ar(`[
-			 	[freq, 
-			 	freq*LFNoise2.ar(0.1).range(1.9, 2.1), 
-			 	freq*LFNoise2.ar(0.1).range(2.9, 3.1), 
+			 	[freq,
+			 	freq*LFNoise2.ar(0.1).range(1.9, 2.1),
+			 	freq*LFNoise2.ar(0.1).range(2.9, 3.1),
 			 	freq*LFNoise2.ar(0.1).range(3.9, 4.1),
 			 	freq*LFNoise2.ar(0.1).range(4.9, 5.1),
 			 	freq*LFNoise2.ar(0.1).range(5.9, 6.1),
 			 	freq*LFNoise2.ar(0.1).range(6.9, 7.1),
 			 	freq*LFNoise2.ar(0.1).range(7.9, 8.1)
-			 	], 
-			 	nil, [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]], 
+			 	],
+			 	nil, [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]],
 			 	LPF.ar((WhiteNoise.ar(0.003)+WhiteNoise.ar(0.003))*amp, freq*4)), (freq * harmonics).clip(20, 16000));
 
 	//		signal = BPeakEQ.ar(signal, MouseX.kr(55, 5555).poll, 0.5, MouseY.kr(0, 24));
@@ -237,7 +237,7 @@ DroneSynths {
 			Out.ar(out, signal);
 		}, [0, 0.4]).add;
 
-		
+
 
 
 /*
@@ -264,7 +264,7 @@ DroneSynths {
 			// DetectSilence.ar(signal, 0.001, doneAction:2); // security so synths don't pile up
 			Out.ar(out, signal);
 		}, [0, 0.4]).add;
-*/		
+*/
 /*
 a = Synth(\eliane, [\freq, 111])
 a.set(\freq, 111)
@@ -309,9 +309,9 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 
 */
 
-		SynthDef(\droneinstr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43100, endLoop=161200, t_trig=1, attack=1, ratex=1, 
+		SynthDef(\droneinstr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43100, endLoop=161200, t_trig=1, attack=1, ratex=1,
 			dir= 1, amp=0.42, env=#[3,3], harmonics=4, resonance=1, resamp=0, doneAction=2;
-		
+
 			var signal, delay, tr, att, envl, onsetenvtime;
 			// rate supports microtunings -> midinote is the reference pitch of the sample
 		//	var rate = Lag.kr((freq.cpsmidi - midinote ).midiratio, 0.5);
@@ -320,20 +320,20 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 			var looplength = ((endLoop-startLoop)/SampleRate.ir)/rate;
 			var trianglelength = looplength; // in case I want to shorten the triangle (e.g., looplength/2)
 			var changetr =  ( Changed.kr(freq)-1).abs; // drops down to zero if there is a change
-		
+
 		//		rate.poll;
-		
+
 			// sample playback mechanism
 			att = PlayBuf.ar(1, buffer, rate, 1, loop:0)*EnvGen.ar(Env.perc(0.0000001, 2, 1, -4))*attack; // attack
 			//tr = TDelay.kr(Impulse.kr(looplength.reciprocal), looplength-(trianglelength/2)).poll;
 			tr = TDelay.kr(TDuty.kr(looplength, (changetr-1).abs), looplength-(trianglelength/2));
-		
-		
+
+
 			signal = LoopBuf.ar(1, buffer, rate, changetr, startLoop, startLoop, endLoop, 2);
 			//delay = LoopBuf.ar(1, buffer, rate, changetr, 0, startLoop+22000, endLoop+22000, 2);
 			delay = DelayN.ar(LoopBuf.ar(1, buffer, rate*dir, changetr, startLoop, startLoop, endLoop, 2), trianglelength/2, trianglelength/2);
 			signal = XFade2.ar(delay, signal+att, (EnvGen.ar((Env.triangle(trianglelength, -2)), tr+(changetr-1)) +1), Lag.kr(amp, 3));
-		
+
 			// threnoscope system
 			signal = LPF.ar(signal, freq * harmonics);
 			signal = BPeakEQ.ar(signal, freq*Lag.kr(resonance, 1), 1, Lag.kr(resamp, 1));
@@ -476,6 +476,27 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 			signal = signal * envl * AmpComp.kr(freq, 55);
 			Out.ar(out, signal);
 		}).add;
+/*
+///First New Synth (a try out)
+		SynthDef(\dronepadw, {arg freq=110, harmonics=2, oscfreq=0.1, oscamp=0, out=0, amp=0.3, gate=1,
+			env=#[3,3], dep=1, arr=2, time=10, fgate=0, detune=0, resonance=1, resamp=0, doneAction=2;
+			var signal, freqmodosc, freqmodline, envl, amps;
+
+			freqmodosc = SinOsc.ar(oscfreq, pi.rand, oscamp, 1);
+			freqmodline = EnvGen.ar(Env.new([dep,arr],[time]), fgate);
+			amps = [0.6134, 0.5103, 0.3041, 0.2216, 0.4175, 0.1082, 0.067, 0.0773, 0, 0.01546];
+			signal = amps.collect({|amp, i| SinOsc.ar([freq *(i+1), freq *(i+1) +Rand(1, 3.8)], 0, amp*0.1) }).sum
+			+ amps.collect({|amp, i| SinOsc.ar([freqmodosc * freqmodline * freq *(i+1), freq *(i+1) +Rand(1, 3.8)], 0, amp*0.1) }).sum;
+            ///trying a waveloss......
+			signal = WaveLoss.ar(signal, freq/(10+Rand(1, 3.8)), 40);
+			signal = BPeakEQ.ar(signal, freq*Lag.kr(resonance, 1), 1, Lag.kr(resamp, 1));
+
+			envl = EnvGen.kr(Env.asr(env[0], 1, env[1], 0), gate, doneAction:doneAction);
+			signal = signal * envl * AmpComp.kr(freq, 55);
+			Out.ar(out, signal);
+		}).add;
+*/
+
 
 
 
@@ -501,7 +522,7 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 		// STANDALONE
 		path = hub.appPath ++"/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
 		// CLASSES
-		path = Platform.userAppSupportDir ++"/threnoscope/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
+		path = Platform.userAppSupportDir ++"/downloaded/quarks/threnoscopeSC/threnoscope/samples/"++ sampleDict[instr][nearestFreq.asSymbol][\path];
 
 		[\nearestFreq, nearestFreq, \sample, path].postln;
 		^path;
@@ -526,24 +547,24 @@ SynthDef(\instr, {arg buffer, out=0, freq=440, midinote=69, gate=1, startLoop=43
 	initSampleDict {
 		var file, string;
 	//	file = File("sounds/threnoscope/_samples.scd","r");
-	
+
 		//file = File("/Users/thm21/Library/Application Support/SuperCollider/sounds/threnoscope/_samples.scd","r");
-		
+
 		[\HUBAPPPATH, hub.appPath].postln;
 
-		// STANDALONE 
+		// STANDALONE
 	  	// file = File(hub.appPath++"/samples/_samples.scd","r");
-		
-		// RUNNING TS AS CLASSES IN SC
-		file = File(Platform.userAppSupportDir++"/threnoscope/samples/_samples.scd","r");
 
-		
+		// RUNNING TS AS CLASSES IN SC
+		file = File(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/samples/_samples.scd","r");
+
+
 
 	//	file = File(hub.appPath++"/sounds/threnoscope/_samples.scd","r");
 		string = file.readAllString;
 		sampleDict = string.interpret;
 		file.close;
-		
+
 		~sd = sampleDict;
 		[\sampleDict, sampleDict].postln;
 
