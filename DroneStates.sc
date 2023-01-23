@@ -3,7 +3,7 @@
 // can move between sets
 
 DroneStates {
-	
+
 	var hub;
 	var recScoreArray, scoreArray;
 	var randomseed;
@@ -12,21 +12,21 @@ DroneStates {
 	var <>codescore; // a GUI code score
 	var speed, <>playing, clock, refclock, counter;
 	//var starttime;
-	
+
 	*new { |hub|
 		^super.new.initDroneStates( hub);
 	}
 
-	initDroneStates { |arghub| 
+	initDroneStates { |arghub|
 		hub = arghub;
 		randomseed = hub.randomseed;
 		// standalone
 		// storedGroupsDict = Object.readArchive(hub.appPath++"/groups/groups.grp");
 		// classes
-		storedGroupsDict = Object.readArchive(Platform.userAppSupportDir++"/threnoscope/groups/groups.grp");
+		storedGroupsDict = Object.readArchive(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/groups/groups.grp");
 		if(storedGroupsDict.isNil, { storedGroupsDict = () });
 	}
-	
+
 	// if you want to create a new state, use this method, as you might have been recording for a while
 	startRecord {
 		// record a performance to be played back in playScore
@@ -35,23 +35,23 @@ DroneStates {
 		recScoreArray = [];
 		recording = true;
 	}
-	
+
 	stopRecord {
 		// stop recording
 		"STOPPED RECORDING".postln;
 		recording = false;
 	}
-	
+
 	// XXX - this needs to be updated
 	addToScore_ { |string| // method called from the interpreter
-		if( ( 	string.contains("playScore") 	|| 
-				string.contains("playSubScore") 	|| 
-				string.contains("saveState") 	|| 
-				string.contains("startRecord") 	|| 
-				string.contains("saveScore") 	|| 
-				string.contains("swapState") 	|| 
-				string.contains("viewScope") 	|| 
-				string.contains("playCodeScore")	|| 
+		if( ( 	string.contains("playScore") 	||
+				string.contains("playSubScore") 	||
+				string.contains("saveState") 	||
+				string.contains("startRecord") 	||
+				string.contains("saveScore") 	||
+				string.contains("swapState") 	||
+				string.contains("viewScope") 	||
+				string.contains("playCodeScore")	||
 				string.contains("states") 		||  // from DroneController
 				string.contains("tunings") 		||  // from DroneController
 				string.contains("scales") 		||  // from DroneController
@@ -64,7 +64,7 @@ DroneStates {
 			});
 		});
 	}
-	
+
 	// NOTE: States have the same formats as scores, except they are atemporal (thus a one dimensional array)
 	loadState { |name, recording| // one might want to record a loadstate
 		var score;
@@ -84,8 +84,8 @@ DroneStates {
 		var score;
 		// standalone
 		// #randomseed, score = Object.readArchive(hub.appPath++"/states/"++name++".drnST");
-		// classes 
-		#randomseed, score = Object.readArchive(Platform.userAppSupportDir++"/threnoscope/states/"++name++".drnST");
+		// classes
+		#randomseed, score = Object.readArchive(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/states/"++name++".drnST");
 		thisThread.randSeed = randomseed;
 		score.do({ arg event;
 			event[1].interpret;
@@ -93,11 +93,11 @@ DroneStates {
 			//hub.interpreter.opInterpreter("> " ++ event[1]); // event[0] is time, but that's not used here
 		});
 	}
-	
+
 	// human readable saveState
 	saveState { | name |
 		var file, offsettime, savedScoreArray, score;
-		
+
 		if(codescore.isNil, { // if there is no code score window open
 			offsettime = recScoreArray[0][0];
 			savedScoreArray = recScoreArray.copy.collect({arg event; [0, event[1]]}); // all events happening at 0 sec
@@ -108,22 +108,22 @@ DroneStates {
 		score = [randomseed, savedScoreArray];
 		score = score.asCompileString;
 		score = score.replace("],", "],\n").replace("[ [", "[\n ["); // Make the file human readable (one event per line)
-		
+
 		// standalone
 		// file = File(hub.appPath++"/states/"++name++".drnST", "w");
-		// classes 
-		file = File(Platform.userAppSupportDir++"/threnoscope/states/"++name++".drnST", "w");
+		// classes
+		file = File(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/states/"++name++".drnST", "w");
 		file.write(score);
-		file.close;	
+		file.close;
 	}
-	
+
 	swapState { |name, time=10|
-		var score, olddrones;		
+		var score, olddrones;
 		"SWAPPING STATE: ".post; name.postln;
 		// standalone
 		// #randomseed, score = Object.readArchive(hub.appPath++"/states/"++name++".drnST");
 		// classes
-		#randomseed, score = Object.readArchive(Platform.userAppSupportDir++"/threnoscope/states/"++name++".drnST");
+		#randomseed, score = Object.readArchive(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/states/"++name++".drnST");
 		thisThread.randSeed = randomseed;
 		olddrones = hub.drones.droneDict.keys.deepCopy;
 		// get rid of old drones
@@ -151,11 +151,11 @@ DroneStates {
 				(time/score.size).wait;
 			}) }.fork(TempoClock.new);
 	}
-	
+
 	saveScore { | name |
 		var file, offsettime, savedScoreArray, score;
 		"saving score : ".post; name.postln;
-		
+
 		if(codescore.isNil, { // if there is no code score window open
 			offsettime = recScoreArray[0][0];
 			savedScoreArray = recScoreArray.copy.collect({arg event; [event[0]-offsettime, event[1]]});
@@ -169,60 +169,60 @@ DroneStates {
 		// standalone
 		// file = File(hub.appPath++"/scores/"++name++".drnSC", "w");
 		// classes
-		file = File(Platform.userAppSupportDir++"/threnoscope/scores/"++name++".drnSC", "w");
+		file = File(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scores/"++name++".drnSC", "w");
 		file.write(score);
-		file.close;	
+		file.close;
 	}
-		
+
 	playScore { | name, aspeed=1 | // This is human coded score
 		// var offsettime, lastoffsettime, score;
 		var zerotimeindex, schedulemainclockat;
-		
+
 		//hub.post = false; // turn drone creation posting off
 		//this.startRecord(); // or should it stop recording?
 		speed = aspeed;
 		//if(name.isNil.not, {
 		// standalone
 		// #randomseed, scoreArray = (hub.appPath++"/scores/"++name++".drnSC").load;
-		// classes 
-		#randomseed, scoreArray = (Platform.userAppSupportDir++"/threnoscope/scores/"++name++".drnSC").load;
+		// classes
+		#randomseed, scoreArray = (Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scores/"++name++".drnSC").load;
 		//});
 		scoreArray = scoreArray.sort({arg a, b; a[0] <= b[0] }); // home-made sort algorithm as there are subarrays
-		
+
 		// the code below does the zero time events before clocks are scheduled
 		zerotimeindex = 0;
 		while({scoreArray[zerotimeindex][0] == 0}, {
 			//hub.interpreter.opInterpreter("> " ++ scoreArray[zerotimeindex][1]);
-	//		scoreArray[zerotimeindex][1].interpret; // when the score item was a string 
+	//		scoreArray[zerotimeindex][1].interpret; // when the score item was a string
 			scoreArray[zerotimeindex][1].value; // scores items are stored as functions
-			zerotimeindex = zerotimeindex+1; 
+			zerotimeindex = zerotimeindex+1;
 		});
 		// and then we find the next event
 		schedulemainclockat = scoreArray[zerotimeindex][0];
-		
+
 		refclock = TempoClock.new.schedAbs( 0, { | time |
 			[\clocktime, time].postln;
 			//[\nextevent, scoreArray[scoreArray.collect({ |event| event[0] }).indexOfGreaterThan(refclock.nextTimeOnGrid)]].postln;
 			//time.asInteger.asString.speak;
-			// metro tick -> 
+			// metro tick ->
 			// {SinOsc.ar(8000)*XLine.ar(0.25,0.001,0.11, doneAction:2)!2}.play;
 			1;
 		});
 
 		counter = 0;
 		this.createClock(schedulemainclockat, speed); // was 1.0
-		
+
 		if(codescore.isNil.not, {codescore.startTimeline( speed )});
 		playing = true;
 	}
-		
+
 	// NOTE: This create clock is slightly strange and is recalculated on every move
 	// in the Code Score. If code was not moved in time, this would not be needed, but since
 	// it is dynamic code score, the clocks need to be rescheduled.
 	createClock { | schedtime, speed |
 		var event, lastdur;
 		// var nextindex, nexttime, thistime;
-		
+
 		clock.stop;
 		// counter recalculated to know where in the drone score the clock is (using the refclock)
 		[\counterA, counter].postln;
@@ -230,25 +230,25 @@ DroneStates {
 		//schedtime = schedtime + aschedtime;
 		[\counterB, counter].postln;
 		[\schedtime, schedtime].postln;
-		"_______________________________ NEW CLOCK ____________________________________sched time :  ".post; schedtime.postln; 
+		"_______________________________ NEW CLOCK ____________________________________sched time :  ".post; schedtime.postln;
 		clock = TempoClock.new.schedAbs( schedtime, { | time |
 
 			event = scoreArray[counter];
 			lastdur = event[0];
-			
+
 			event[1].value;
-			
+
 			{if(hub.post, {
 			//	hub.interpreter.postview.string_("time: "++ time ++ " : " ++ event[1].asCompileString)
 				hub.interpreter.postview.string_(hub.interpreter.postview.string ++ "\ntime: "++ time ++ " : " ++ event[1].asCompileString)
 			}) }.defer;
-			
+
 			counter = counter + 1;
-			
+
 			// need to defer the killing of clocks here, or else drones won't fade out
 			if(scoreArray[counter].isNil, { {clock.stop; refclock.stop }.defer; nil }, { (scoreArray[counter][0]-lastdur) * speed.reciprocal});
 			//nexttime-thistime;
-		});	
+		});
 	}
 
 
@@ -262,12 +262,12 @@ DroneStates {
 		// STANDALONE
 		#randomseed, scoreArray = (hub.appPath++"/scores/"++name++".drnSC").load;
 		// RUNNING TS IN SC AS CLASSES
-		#randomseed, scoreArray = (Platform.userAppSupportDir++"/threnoscope/scores/"++name++".drnSC").load;
+		#randomseed, scoreArray = (Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scores/"++name++".drnSC").load;
 
 		scoreArray = scoreArray.sort({ | a, b | a[0] <= b[0] }); // home made sort algorithm as there are subarrays
-		
+
 		counter = 0;
-		
+
 		subinfoclock = TempoClock.new.schedAbs( 0, { | time |
 				[\____________subscoretime, time].postln;
 			1;
@@ -276,7 +276,7 @@ DroneStates {
 		playtask = TempoClock.new.sched(0.0, { | time |
 			event = scoreArray[counter];
 			[\subScore_event_______NOW_RUNNING_, event ].postln;
-			// hub.interpreter.opInterpreter("> " ++ event[1]); 
+			// hub.interpreter.opInterpreter("> " ++ event[1]);
 	//		event[1].interpret; // when score is a string
 			event[1].value; // when score is a function
 			counter = counter + 1;
@@ -288,39 +288,39 @@ DroneStates {
 		clock.stop;
 		refclock.stop;
 		if(codescore.isNil.not, {codescore.stopTimeline });
-		playing = false;	
+		playing = false;
 		// hub.drones.killAll; // we might not want to kill all the drones
 	}
-	
+
 	updateScore { | score | // from realtime manipulations of the graphical code score
 		var nextevent;
 		"-----------------------UPDATING SCORE".postln;
 		scoreArray = score.sort({arg a, b; a[0] <= b[0] }); // home made sort algorithm as there are subarrays // WORKS
 		nextevent = scoreArray[scoreArray.collect({ |event| event[0] }).indexOfGreaterThan(refclock.nextTimeOnGrid)][0]; // WORKS
-		
+
 		[\nextevent, nextevent].postln;
 		[\clock_beats, refclock.beats].postln;
-				
+
 		this.createClock( nextevent-refclock.beats, speed ); // might have to absolute .beats (beats.ceil)?
-		
+
 		[\scoreArray________________________________].postln;
 		Post << scoreArray;
 		//scoreArray = scoreArray.collect({|event| event[0] = event[0]/speed });
-		
+
 	}
-	
+
 	showScore { | name, scale=30, speed=1 |
 		// the code timeline
-		
+
 		if(name.isNil.not, { // then we use the playscore score
 			// STANDALONE
 			//#randomseed, scoreArray = (hub.appPath++"/scores/"++name++".drnSC").load;
 			// TS AS CLASSES IN SC
-			#randomseed, scoreArray = (Platform.userAppSupportDir++"/threnoscope/scores/"++name++".drnSC").load;
+			#randomseed, scoreArray = (Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scores/"++name++".drnSC").load;
 			// scoreArray = scoreArray.sort({arg a, b; a[0] <= b[0] }); // home made sort algorithm as there are subarrays
 			scoreArray = scoreArray.collect({|event| event[0] = event[0]/speed });
 		});
-		
+
 		Post << scoreArray;
 		codescore = DroneCodeScore.new( hub, scale );
 		codescore.parseScore( scoreArray );
@@ -333,7 +333,7 @@ DroneStates {
 		codescore = nil;
 		hub.interpreter.codescore(false);
 	}
-	
+
 	playMIDI { | filepath |
 		var file, tracks;
 		file = SimpleMIDIFile.read(filepath);
@@ -343,7 +343,7 @@ DroneStates {
 		tracks.do({arg i;
 			var movementarray;
 			var delta = 0;
-			hub.drones.createDrone(\saw, 2, amp:0.3, name:("midi_"++i).asSymbol);			
+			hub.drones.createDrone(\saw, 2, amp:0.3, name:("midi_"++i).asSymbol);
 			movementarray = [];
 			file.noteEvents.do({arg event;
 				var time, realtime;
@@ -363,14 +363,14 @@ DroneStates {
 			hub.drones.droneArray.last.startMIDI(("midi_"++i).asSymbol, movementarray);
 		})
 	}
-	
+
 	states {
 		var states, statestring;
 		statestring = "";
 		// standalone
 		// states = hub.appPath++"/states/*.drnST".pathMatch;
 		// classes
-		states = Platform.userAppSupportDir++"/threnoscope/states/*.drnST".pathMatch;
+		states = Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/states/*.drnST".pathMatch;
 		states.do({arg path; statestring = statestring ++ " | " ++ path.basename.splitext[0] });
 		statestring = statestring ++ " | ";
 		^statestring
@@ -382,12 +382,12 @@ DroneStates {
 		// standalone
 		// scores = hub.appPath++"scores/*.drnSC".pathMatch;
 		// classes
-		scores = Platform.userAppSupportDir++"/threnoscope/scores/*.drnSC".pathMatch;
+		scores = Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/scores/*.drnSC".pathMatch;
 		scores.do({arg path; scorestring = scorestring ++ " | " ++ path.basename.splitext[0] });
 		scorestring = scorestring ++ " | ";
 		^scorestring
 	}
-	
+
 	chords {
 		var chords, chordsstring;
 		chordsstring = "";
@@ -399,7 +399,7 @@ DroneStates {
 		})}.defer;
 		^chordsstring
 	}
-	
+
 	scales {
 		var scales, scalesstring;
 		scalesstring = "";
@@ -409,18 +409,18 @@ DroneStates {
 		{if(hub.post, {hub.interpreter.postview.string_(scalesstring)})}.defer;
 		^scalesstring
 	}
-	
+
 	post {
-	 	Post << scoreArray;	
+	 	Post << scoreArray;
 	}
-	
+
 	storeGroup { | name, argsDict |
 		storedGroupsDict.add(name.asSymbol -> argsDict);
 		// standalone
 		storedGroupsDict.writeArchive(hub.appPath++"/groups/groups.grp");
 		// classes
-		storedGroupsDict.writeArchive(Platform.userAppSupportDir++"/threnoscope/groups/groups.grp");
-	
-	}	
+		storedGroupsDict.writeArchive(Platform.userAppSupportDir++"/downloaded-quarks/threnoscopeSC/threnoscope/groups/groups.grp");
+
+	}
 }
 
